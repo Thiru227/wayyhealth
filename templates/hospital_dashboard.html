@@ -1,0 +1,1090 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ hospital.name }} - Dashboard</title>
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+        }
+        
+        .navbar {
+            background: rgba(15, 23, 42, 0.98);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(59, 130, 246, 0.3);
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #3b82f6;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .nav-link {
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            text-decoration: none;
+            color: #94a3b8;
+            transition: all 0.2s;
+        }
+        
+        .nav-link:hover {
+            background: rgba(59, 130, 246, 0.15);
+            color: #3b82f6;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: rgba(30, 41, 59, 0.6);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border-left: 4px solid;
+        }
+        
+        .stat-card.red { border-left-color: #ef4444; }
+        .stat-card.green { border-left-color: #22c55e; }
+        .stat-card.blue { border-left-color: #3b82f6; }
+        .stat-card.yellow { border-left-color: #fbbf24; }
+        
+        .stat-label {
+            font-size: 0.875rem;
+            opacity: 0.8;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+        
+        .inventory-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .blood-type-card {
+            background: rgba(30, 41, 59, 0.6);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        
+        .blood-type-card.low {
+            border-color: #ef4444;
+            background: rgba(239, 68, 68, 0.1);
+        }
+        
+        .blood-type-card.critical {
+            border-color: #ef4444;
+            background: rgba(239, 68, 68, 0.2);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .blood-type {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        
+        .blood-units {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #3b82f6;
+        }
+        
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr 1fr;
+            gap: 2rem;
+        }
+        
+        .card {
+            background: rgba(30, 41, 59, 0.6);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+        
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2563eb;
+            transform: translateY(-2px);
+        }
+        
+        .btn-success {
+            background: #22c55e;
+            color: white;
+        }
+        
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .btn-sm {
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+        }
+        
+        .blood-unit-item {
+            background: rgba(15, 23, 42, 0.6);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .blood-unit-item.expiring-soon {
+            border-left: 3px solid #f59e0b;
+        }
+        
+        .request-item {
+            background: rgba(15, 23, 42, 0.6);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+        }
+        
+        .request-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .status-pending {
+            background: rgba(251, 191, 36, 0.2);
+            color: #fbbf24;
+        }
+        
+        .status-approved {
+            background: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+        }
+        
+        .status-rejected {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            overflow-y: auto;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: #1e293b;
+            border-radius: 16px;
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+        }
+        
+        .modal-content.large {
+            max-width: 1200px;
+        }
+        
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(15, 23, 42, 0.6);
+            color: #e2e8f0;
+            font-size: 1rem;
+        }
+        
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        /* QR Scanner Styles */
+        #reader {
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px solid #3b82f6;
+            margin-bottom: 1rem;
+        }
+
+        .scanner-controls {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .scan-status {
+            text-align: center;
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-size: 0.875rem;
+        }
+
+        .scan-status.scanning {
+            background: rgba(34, 197, 94, 0.1);
+            color: #22c55e;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+
+        .scan-status.stopped {
+            background: rgba(100, 116, 139, 0.1);
+            color: #94a3b8;
+            border: 1px solid rgba(100, 116, 139, 0.3);
+        }
+
+        .scan-status.error {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .qr-result-card {
+            background: rgba(59, 130, 246, 0.1);
+            border: 2px solid rgba(59, 130, 246, 0.3);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .blood-type-display {
+            display: inline-block;
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 10px;
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .info-grid-scan {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .info-item-scan {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 0.75rem;
+            border-radius: 8px;
+        }
+
+        .info-label-scan {
+            font-size: 0.7rem;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.25rem;
+        }
+
+        .info-value-scan {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #e2e8f0;
+        }
+
+        .location-info-scan {
+            background: rgba(34, 197, 94, 0.1);
+            border: 2px solid rgba(34, 197, 94, 0.3);
+            border-radius: 10px;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+
+        .location-info-scan.transit {
+            background: rgba(245, 158, 11, 0.1);
+            border-color: rgba(245, 158, 11, 0.3);
+        }
+
+        .location-title-scan {
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .location-detail {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 6px;
+            margin-bottom: 0.5rem;
+        }
+
+        .warning-scan {
+            background: rgba(239, 68, 68, 0.1);
+            border: 2px solid rgba(239, 68, 68, 0.3);
+            border-radius: 10px;
+            padding: 1rem;
+            margin-top: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        @media (max-width: 1200px) {
+            .main-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .inventory-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .info-grid-scan {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">🏥 {{ hospital.name }}</div>
+        <div class="nav-links">
+            <a href="/dashboard" class="nav-link">Dashboard</a>
+            <a href="/blood-entry" class="nav-link">Blood Entry</a>
+            <a href="/logout" class="nav-link">Logout</a>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <div class="stats-grid">
+            <div class="stat-card blue">
+                <div class="stat-label">Total Available Units</div>
+                <div class="stat-value">{{ available_units|length }}</div>
+            </div>
+            <div class="stat-card green">
+                <div class="stat-label">Units Used (30 days)</div>
+                <div class="stat-value">{{ used_count }}</div>
+            </div>
+            <div class="stat-card red">
+                <div class="stat-label">Expired Units</div>
+                <div class="stat-value">{{ expired_count }}</div>
+            </div>
+            <div class="stat-card yellow">
+                <div class="stat-label">Pending Requests</div>
+                <div class="stat-value">{{ incoming_requests|length }}</div>
+            </div>
+        </div>
+        
+        <h3 style="margin-bottom: 1rem;">🩸 Current Blood Inventory</h3>
+        <div class="inventory-grid">
+            {% for blood_type in ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'] %}
+            <div class="blood-type-card {% if inventory %}{% if inventory[blood_type] < 3 %}critical{% elif inventory[blood_type] < 5 %}low{% endif %}{% endif %}">
+                <div class="blood-type">{{ blood_type }}</div>
+                <div class="blood-units">
+                    {% if inventory %}{{ inventory[blood_type] }}{% else %}0{% endif %}
+                </div>
+                <div style="font-size: 0.875rem; opacity: 0.8;">units</div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2rem;">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">🚨 Request Emergency Blood</h3>
+                </div>
+                <button class="btn btn-primary" onclick="openRequestModal()">
+                    + Request Blood from Network
+                </button>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">📷 Scan Blood QR Code</h3>
+                </div>
+                <button class="btn btn-primary" onclick="openScannerModal()">
+                    🔍 Open QR Scanner
+                </button>
+            </div>
+        </div>
+        
+        <div class="main-grid">
+            <div>
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">📦 Blood Units (QR Codes)</h3>
+                        <a href="/blood-entry" class="btn btn-success btn-sm">+ Add Blood</a>
+                    </div>
+                    
+                    {% if available_units %}
+                        {% for unit in available_units[:10] %}
+                        <div class="blood-unit-item {% if unit.is_expiring_soon %}expiring-soon{% endif %}">
+                            <div>
+                                <div><strong>{{ unit.blood_id }}</strong></div>
+                                <div style="font-size: 0.85rem; opacity: 0.8;">
+                                    {{ unit.blood_type }} | {{ unit.units }} unit(s) | 
+                                    Donor: {{ unit.donor_id }}
+                                </div>
+                                <div style="font-size: 0.75rem; opacity: 0.7;">
+                                    Expires: {{ unit.expiry_date.strftime('%Y-%m-%d') }}
+                                    {% if unit.is_expiring_soon %}
+                                    ⚠️ {{ unit.days_until_expiry }} days left
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <button class="btn btn-primary btn-sm" onclick="window.open('/view-qr/{{ unit._id }}', '_blank')">
+                                    View QR
+                                </button>
+                                <button class="btn btn-danger btn-sm" onclick="markUsed('{{ unit._id }}')">
+                                    Mark Used
+                                </button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p style="text-align: center; opacity: 0.6; padding: 2rem;">
+                            No blood units available. Add blood donations to generate QR codes.
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div>
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">📥 Incoming Requests</h3>
+                    </div>
+                    
+                    {% if incoming_requests %}
+                        {% for req in incoming_requests %}
+                        <div class="request-item">
+                            <div class="request-header">
+                                <strong>{{ req.requesting_hospital_name }}</strong>
+                                <span class="status-badge status-{{ req.status }}">{{ req.status }}</span>
+                            </div>
+                            <div style="font-size: 0.875rem; margin-bottom: 0.5rem;">
+                                🩸 {{ req.units }} units of {{ req.blood_type }}
+                            </div>
+                            {% if req.status == 'pending' %}
+                            <div style="display: flex; gap: 0.5rem; margin-top: 0.75rem;">
+                                <button class="btn btn-success btn-sm" onclick="approveRequest('{{ req._id }}')">
+                                    ✓ Approve
+                                </button>
+                                <button class="btn btn-danger btn-sm" onclick="rejectRequest('{{ req._id }}')">
+                                    ✗ Reject
+                                </button>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p style="text-align: center; opacity: 0.6; padding: 2rem;">
+                            No incoming requests
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div>
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">📤 My Requests</h3>
+                    </div>
+                    
+                    {% if my_requests %}
+                        {% for req in my_requests %}
+                        <div class="request-item">
+                            <div class="request-header">
+                                <strong>{{ req.blood_type }}</strong>
+                                <span class="status-badge status-{{ req.status }}">{{ req.status }}</span>
+                            </div>
+                            <div style="font-size: 0.875rem;">
+                                {{ req.units }} units | {{ req.created_at.strftime('%H:%M') }}
+                            </div>
+                            {% if req.donor_hospital_name %}
+                            <div style="font-size: 0.75rem; opacity: 0.7; margin-top: 0.25rem;">
+                                From: {{ req.donor_hospital_name }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p style="text-align: center; opacity: 0.6; padding: 2rem;">
+                            No requests made
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Request Blood Modal -->
+    <div id="requestModal" class="modal">
+        <div class="modal-content">
+            <h2 style="margin-bottom: 1.5rem;">Request Emergency Blood</h2>
+            
+            <div class="form-group">
+                <label class="form-label">Blood Type</label>
+                <select id="bloodType" class="form-input">
+                    <option value="A+">A+</option>
+                    <option value="A-">A-</option>
+                    <option value="B+">B+</option>
+                    <option value="B-">B-</option>
+                    <option value="O+">O+</option>
+                    <option value="O-">O-</option>
+                    <option value="AB+">AB+</option>
+                    <option value="AB-">AB-</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Units Needed</label>
+                <input type="number" id="unitsNeeded" class="form-input" value="2" min="1">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Urgency</label>
+                <select id="urgency" class="form-input">
+                    <option value="critical">Critical</option>
+                    <option value="high">High</option>
+                    <option value="medium">Medium</option>
+                </select>
+            </div>
+            
+            <div class="form-actions">
+                <button class="btn btn-primary" onclick="submitRequest()">Submit Request</button>
+                <button class="btn btn-danger" onclick="closeRequestModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- QR Scanner Modal -->
+    <div id="scannerModal" class="modal">
+        <div class="modal-content large">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h2>🔍 Blood QR Scanner</h2>
+                <button class="btn btn-danger btn-sm" onclick="closeScannerModal()">✕ Close</button>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                <!-- Scanner Section -->
+                <div>
+                    <h3 style="margin-bottom: 1rem;">📷 Camera Scanner</h3>
+                    <div id="reader"></div>
+                    
+                    <div class="scanner-controls">
+                        <button class="btn btn-success btn-sm" id="startBtn" onclick="startScanner()">
+                            ▶️ Start Scanner
+                        </button>
+                        <button class="btn btn-danger btn-sm" id="stopBtn" onclick="stopScanner()" disabled>
+                            ⏹️ Stop Scanner
+                        </button>
+                    </div>
+                    
+                    <div id="scanStatus" class="scan-status stopped">
+                        Click "Start Scanner" to begin
+                    </div>
+                </div>
+                
+                <!-- Results Section -->
+                <div>
+                    <h3 style="margin-bottom: 1rem;">📊 Scan Results</h3>
+                    
+                    <div id="noScanResults" style="text-align: center; padding: 3rem; opacity: 0.6;">
+                        <div style="font-size: 3rem; margin-bottom: 1rem;">🔎</div>
+                        <p>No QR code scanned yet</p>
+                        <p style="font-size: 0.875rem; margin-top: 0.5rem;">
+                            Start the scanner and point at a blood QR code
+                        </p>
+                    </div>
+                    
+                    <div id="scanResults" style="display: none;">
+                        <div class="qr-result-card">
+                            <div class="blood-type-display" id="scannedBloodType">A+</div>
+                            <div style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem;" id="scannedBloodId">
+                                BLOOD123456
+                            </div>
+                            
+                            <div class="info-grid-scan">
+                                <div class="info-item-scan">
+                                    <div class="info-label-scan">Units</div>
+                                    <div class="info-value-scan" id="scannedUnits">2</div>
+                                </div>
+                                <div class="info-item-scan">
+                                    <div class="info-label-scan">Days to Expiry</div>
+                                    <div class="info-value-scan" id="scannedDaysExpiry">25</div>
+                                </div>
+                                <div class="info-item-scan">
+                                    <div class="info-label-scan">Collected</div>
+                                    <div class="info-value-scan" id="scannedCollected">Jan 15</div>
+                                </div>
+                                <div class="info-item-scan">
+                                    <div class="info-label-scan">Expires</div>
+                                    <div class="info-value-scan" id="scannedExpiry">Feb 19</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="locationInfoScan"></div>
+                        
+                        <div id="warningScan" style="display: none;" class="warning-scan">
+                            <div style="font-size: 2rem;">⚠️</div>
+                            <div>
+                                <strong>Expiring Soon!</strong>
+                                <p style="font-size: 0.875rem; margin-top: 0.25rem;">
+                                    This blood unit expires in less than 7 days.
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <div id="errorScan" style="display: none;" class="warning-scan">
+                            <div style="font-size: 2rem;">❌</div>
+                            <div>
+                                <strong>Error</strong>
+                                <p id="errorTextScan" style="font-size: 0.875rem; margin-top: 0.25rem;"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let html5QrCode;
+        let isScanning = false;
+        
+        // Scan Sound Effects using Web Audio API
+        function playScanSuccess() {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const duration = 0.15; // 150ms per tone
+            
+            // First beep: 800Hz
+            const oscillator1 = audioContext.createOscillator();
+            const gainNode1 = audioContext.createGain();
+            oscillator1.connect(gainNode1);
+            gainNode1.connect(audioContext.destination);
+            
+            oscillator1.frequency.value = 800;
+            oscillator1.type = 'sine';
+            
+            gainNode1.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode1.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+            
+            oscillator1.start(audioContext.currentTime);
+            oscillator1.stop(audioContext.currentTime + duration);
+            
+            // Second beep: 1000Hz (after first beep)
+            setTimeout(() => {
+                const oscillator2 = audioContext.createOscillator();
+                const gainNode2 = audioContext.createGain();
+                oscillator2.connect(gainNode2);
+                gainNode2.connect(audioContext.destination);
+                
+                oscillator2.frequency.value = 1000;
+                oscillator2.type = 'sine';
+                
+                gainNode2.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode2.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+                
+                oscillator2.start(audioContext.currentTime);
+                oscillator2.stop(audioContext.currentTime + duration);
+            }, duration * 1000 + 50); // Small gap between beeps
+        }
+        
+        function playScanError() {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const duration = 0.3; // 300ms
+            
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.value = 200; // Low frequency buzzer
+            oscillator.type = 'sawtooth'; // Harsher sound for error
+            
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + duration);
+        }
+        
+        function openRequestModal() {
+            document.getElementById('requestModal').classList.add('active');
+        }
+        
+        function closeRequestModal() {
+            document.getElementById('requestModal').classList.remove('active');
+        }
+
+        function openScannerModal() {
+            document.getElementById('scannerModal').classList.add('active');
+            // Auto-start scanner when modal opens
+            setTimeout(() => {
+                if (!isScanning) {
+                    startScanner();
+                }
+            }, 500);
+        }
+
+        function closeScannerModal() {
+            if (isScanning) {
+                stopScanner();
+            }
+            document.getElementById('scannerModal').classList.remove('active');
+        }
+
+        function startScanner() {
+            const config = {
+                fps: 10,
+                qrbox: { width: 250, height: 250 },
+                aspectRatio: 1.0
+            };
+            
+            html5QrCode = new Html5Qrcode("reader");
+            
+            html5QrCode.start(
+                { facingMode: "environment" },
+                config,
+                onScanSuccess,
+                onScanError
+            ).then(() => {
+                isScanning = true;
+                document.getElementById('startBtn').disabled = true;
+                document.getElementById('stopBtn').disabled = false;
+                const statusEl = document.getElementById('scanStatus');
+                statusEl.textContent = '✓ Scanner active - Point camera at QR code';
+                statusEl.className = 'scan-status scanning';
+            }).catch(err => {
+                console.error('Error starting scanner:', err);
+                const statusEl = document.getElementById('scanStatus');
+                statusEl.textContent = '❌ Failed to start scanner. Check camera permissions.';
+                statusEl.className = 'scan-status error';
+            });
+        }
+        
+        function stopScanner() {
+            if (html5QrCode && isScanning) {
+                html5QrCode.stop().then(() => {
+                    isScanning = false;
+                    document.getElementById('startBtn').disabled = false;
+                    document.getElementById('stopBtn').disabled = true;
+                    const statusEl = document.getElementById('scanStatus');
+                    statusEl.textContent = 'Scanner stopped';
+                    statusEl.className = 'scan-status stopped';
+                }).catch(err => {
+                    console.error('Error stopping scanner:', err);
+                });
+            }
+        }
+        
+        function onScanSuccess(decodedText, decodedResult) {
+            console.log('QR Code detected:', decodedText);
+            stopScanner();
+            playScanSuccess(); // Play success sound
+            verifyQRCode(decodedText);
+        }
+        
+        function onScanError(errorMessage) {
+            // Ignore continuous scan errors
+        }
+        
+        async function verifyQRCode(qrData) {
+            try {
+                const response = await fetch('/api/verify-qr', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ qr_data: qrData })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayScanResults(data);
+                } else {
+                    playScanError(); // Play error sound
+                    displayScanError(data.error || 'Invalid QR code');
+                }
+            } catch (error) {
+                console.error('Error verifying QR:', error);
+                playScanError(); // Play error sound
+                displayScanError('Failed to verify QR code. Please try again.');
+            }
+        }
+        
+        function displayScanResults(data) {
+            document.getElementById('noScanResults').style.display = 'none';
+            document.getElementById('scanResults').style.display = 'block';
+            document.getElementById('errorScan').style.display = 'none';
+            
+            // Show result card
+            document.querySelector('.qr-result-card').style.display = 'block';
+            document.getElementById('locationInfoScan').style.display = 'block';
+            
+            // Blood info
+            document.getElementById('scannedBloodType').textContent = data.blood_unit.blood_type;
+            document.getElementById('scannedBloodId').textContent = data.blood_unit.blood_id;
+            document.getElementById('scannedUnits').textContent = data.blood_unit.units;
+            document.getElementById('scannedDaysExpiry').textContent = data.blood_unit.days_until_expiry;
+            
+            // Format dates
+            const collectedDate = new Date(data.blood_unit.collected_date);
+            const expiryDate = new Date(data.blood_unit.expiry_date);
+            document.getElementById('scannedCollected').textContent = collectedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            document.getElementById('scannedExpiry').textContent = expiryDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            
+            // Location info
+            const locationInfo = document.getElementById('locationInfoScan');
+            
+            if (data.in_transit && data.ambulance_info) {
+                locationInfo.innerHTML = `
+                    <div class="location-info-scan transit">
+                        <div class="location-title-scan">🚑 In Transit</div>
+                        <div class="location-detail">
+                            <span>🚑</span>
+                            <div>
+                                <div style="font-size: 0.75rem; opacity: 0.7;">Ambulance</div>
+                                <div style="font-weight: 600;">${data.ambulance_info.vehicle_number}</div>
+                            </div>
+                        </div>
+                        <div class="location-detail">
+                            <span>👨‍✈️</span>
+                            <div>
+                                <div style="font-size: 0.75rem; opacity: 0.7;">Driver</div>
+                                <div style="font-weight: 600;">${data.ambulance_info.driver_name}</div>
+                            </div>
+                        </div>
+                        <div class="location-detail">
+                            <span>📞</span>
+                            <div>
+                                <div style="font-size: 0.75rem; opacity: 0.7;">Contact</div>
+                                <div style="font-weight: 600;">${data.ambulance_info.driver_phone}</div>
+                            </div>
+                        </div>
+                        <div class="location-detail">
+                            <span>🏥</span>
+                            <div>
+                                <div style="font-size: 0.75rem; opacity: 0.7;">From Hospital</div>
+                                <div style="font-weight: 600;">${data.hospital.name}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                locationInfo.innerHTML = `
+                    <div class="location-info-scan">
+                        <div class="location-title-scan">🏥 In Hospital Storage</div>
+                        <div class="location-detail">
+                            <span>🏥</span>
+                            <div>
+                                <div style="font-size: 0.75rem; opacity: 0.7;">Hospital</div>
+                                <div style="font-weight: 600;">${data.hospital.name}</div>
+                            </div>
+                        </div>
+                        <div class="location-detail">
+                            <span>📍</span>
+                            <div>
+                                <div style="font-size: 0.75rem; opacity: 0.7;">Address</div>
+                                <div style="font-weight: 600;">${data.hospital.address}</div>
+                            </div>
+                        </div>
+                        <div class="location-detail">
+                            <span>📞</span>
+                            <div>
+                                <div style="font-size: 0.75rem; opacity: 0.7;">Phone</div>
+                                <div style="font-weight: 600;">${data.hospital.phone}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Warning for expiring soon
+            const warningEl = document.getElementById('warningScan');
+            if (data.blood_unit.days_until_expiry < 7 && data.blood_unit.location !== 'used') {
+                warningEl.style.display = 'flex';
+            } else {
+                warningEl.style.display = 'none';
+            }
+        }
+        
+        function displayScanError(errorMessage) {
+            document.getElementById('noScanResults').style.display = 'none';
+            document.getElementById('scanResults').style.display = 'block';
+            
+            document.getElementById('errorScan').style.display = 'flex';
+            document.getElementById('errorTextScan').textContent = errorMessage;
+            
+            // Hide other content
+            document.querySelector('.qr-result-card').style.display = 'none';
+            document.getElementById('locationInfoScan').style.display = 'none';
+            document.getElementById('warningScan').style.display = 'none';
+        }
+        
+        function submitRequest() {
+            const data = {
+                blood_type: document.getElementById('bloodType').value,
+                units: document.getElementById('unitsNeeded').value,
+                urgency: document.getElementById('urgency').value
+            };
+            
+            fetch('/request-emergency-blood', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            })
+            .then(r => r.json())
+            .then(result => {
+                if (result.success) {
+                    alert(result.message);
+                    closeRequestModal();
+                    location.reload();
+                } else {
+                    alert(result.message);
+                }
+            });
+        }
+        
+        function approveRequest(requestId) {
+            if (confirm('Approve this blood request?')) {
+                fetch(`/approve-blood-request/${requestId}`, {method: 'POST'})
+                    .then(() => {
+                        alert('Request approved! Ambulance will be arranged.');
+                        location.reload();
+                    });
+            }
+        }
+        
+        function rejectRequest(requestId) {
+            if (confirm('Reject this request?')) {
+                fetch(`/reject-blood-request/${requestId}`, {method: 'POST'})
+                    .then(() => location.reload());
+            }
+        }
+        
+        function markUsed(unitId) {
+            if (confirm('Mark this blood unit as used? This will update inventory.')) {
+                fetch(`/mark-used/${unitId}`, {method: 'POST'})
+                    .then(() => {
+                        alert('Blood unit marked as used');
+                        location.reload();
+                    });
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>College Leaderboard - LifeLink Grid</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0e1a;
+            color: #e2e8f0;
+            min-height: 100vh;
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, #1a1f35 0%, #0f1419 100%);
+            backdrop-filter: blur(20px);
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .logo-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
+        }
+        
+        .logo-text {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .logo-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .logo-subtitle {
+            font-size: 0.75rem;
+            opacity: 0.6;
+            letter-spacing: 0.05em;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 0.5rem;
+            flex: 1;
+            margin-left: 2rem;
+        }
+
+        .nav-link {
+            padding: 0.75rem 1.25rem;
+            border-radius: 10px;
+            text-decoration: none;
+            color: #94a3b8;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-link:hover {
+            background: rgba(59, 130, 246, 0.1);
+            color: #3b82f6;
+        }
+
+        .nav-link.active {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(37, 99, 235, 0.1) 100%);
+            color: #60a5fa;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            position: relative;
+        }
+
+        .trophy-icon {
+            font-size: 5rem;
+            margin-bottom: 1rem;
+            animation: float 3s ease-in-out infinite;
+            display: inline-block;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 0.75rem;
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #fbbf24 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shimmer 3s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .header p {
+            opacity: 0.7;
+            font-size: 1.25rem;
+        }
+
+        .leaderboard {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.6) 100%);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+
+        .leaderboard-header {
+            background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%);
+            padding: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .leaderboard-header h2 {
+            flex: 1;
+            font-size: 1.75rem;
+        }
+
+        .leaderboard-item {
+            padding: 2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            transition: all 0.3s ease;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .leaderboard-item:hover {
+            background: rgba(59, 130, 246, 0.08);
+            transform: translateX(8px);
+        }
+
+        .leaderboard-item:last-child {
+            border-bottom: none;
+        }
+
+        .rank {
+            width: 70px;
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.75rem;
+            font-weight: 700;
+            border-radius: 50%;
+            flex-shrink: 0;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .leaderboard-item:nth-child(1) .rank {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            font-size: 2.25rem;
+            width: 80px;
+            height: 80px;
+            animation: pulse-gold 2s infinite;
+        }
+
+        @keyframes pulse-gold {
+            0%, 100% { box-shadow: 0 0 20px rgba(251, 191, 36, 0.5); }
+            50% { box-shadow: 0 0 40px rgba(251, 191, 36, 0.8); }
+        }
+
+        .leaderboard-item:nth-child(2) .rank {
+            background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
+        }
+
+        .leaderboard-item:nth-child(3) .rank {
+            background: linear-gradient(135deg, #fb923c 0%, #ea580c 100%);
+        }
+
+        .leaderboard-item:nth-child(n+4) .rank {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.3) 0%, rgba(37, 99, 235, 0.2) 100%);
+            border: 2px solid rgba(59, 130, 246, 0.4);
+        }
+
+        .org-info {
+            flex: 1;
+        }
+
+        .org-name {
+            font-size: 1.35rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+        }
+
+        .org-stats {
+            display: flex;
+            gap: 2.5rem;
+            font-size: 0.95rem;
+            opacity: 0.8;
+        }
+
+        .stat {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .awards {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+        }
+
+        .award-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: rgba(34, 197, 94, 0.15);
+            border-radius: 8px;
+            font-size: 0.85rem;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            color: #86efac;
+        }
+
+        .points-section {
+            text-align: right;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 0.5rem;
+        }
+
+        .badge-icon {
+            font-size: 3.5rem;
+        }
+
+        .leaderboard-item:nth-child(1) .badge-icon {
+            font-size: 4rem;
+            animation: rotate-trophy 4s infinite;
+        }
+
+        @keyframes rotate-trophy {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(-10deg); }
+            75% { transform: rotate(10deg); }
+        }
+
+        .points {
+            font-size: 2.25rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .leaderboard-item:nth-child(1) .points {
+            font-size: 2.5rem;
+        }
+
+        .growth {
+            font-size: 0.9rem;
+            color: #22c55e;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        @media (max-width: 768px) {
+            .navbar {
+                flex-wrap: wrap;
+                padding: 1rem;
+            }
+            
+            .nav-links {
+                order: 3;
+                width: 100%;
+                margin-left: 0;
+                margin-top: 1rem;
+            }
+
+            .org-stats {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .awards {
+                margin-top: 0.5rem;
+            }
+
+            .points {
+                font-size: 1.75rem;
+            }
+
+            .leaderboard-item {
+                flex-wrap: wrap;
+            }
+
+            .rank {
+                width: 60px;
+                height: 60px;
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">
+            <div class="logo-icon">⚡</div>
+            <div class="logo-text">
+                <div class="logo-title">LifeLink Grid</div>
+                <div class="logo-subtitle">EMERGENCY RESPONSE NETWORK</div>
+            </div>
+        </div>
+
+        <div class="nav-links">
+            <a href="/dashboard" class="nav-link">🏠 Dashboard</a>
+            <a href="/live-map" class="nav-link">🗺️ Live Map</a>
+            <a href="/donors" class="nav-link">👥 Donors</a>
+            <a href="/gamification" class="nav-link active">🏆 Leaderboard</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="header">
+            <div class="trophy-icon">🏆</div>
+            <h1>College Blood Donation Leaderboard</h1>
+            <p>Competing to save more lives</p>
+        </div>
+
+        <div class="leaderboard">
+            <div class="leaderboard-header">
+                <h2>🎖️ Top Organizations</h2>
+            </div>
+
+            {% for org in organizations %}
+            <div class="leaderboard-item">
+                <div class="rank">{{ loop.index }}</div>
+                
+                <div class="org-info">
+                    <div class="org-name">{{ org.name }}</div>
+                    <div class="org-stats">
+                        <div class="stat">
+                            <span>👥</span>
+                            <span>{{ org.active_donors }} Active Donors</span>
+                        </div>
+                        <div class="stat">
+                            <span>❤️</span>
+                            <span>{{ org.total_donations }} Donations</span>
+                        </div>
+                        {% if org.lives_saved %}
+                        <div class="stat">
+                            <span>💚</span>
+                            <span>{{ org.lives_saved }} Lives Saved</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    {% if org.badge and org.badge != 'none' %}
+                    <div class="awards">
+                        <div class="award-badge">
+                            <span>
+                                {% if org.badge == 'gold' %}🥇
+                                {% elif org.badge == 'silver' %}🥈
+                                {% elif org.badge == 'bronze' %}🥉
+                                {% else %}🏅
+                                {% endif %}
+                            </span>
+                            <span>{{ org.badge|title }} Badge</span>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="points-section">
+                    <div class="badge-icon">
+                        {% if loop.index == 1 %}🥇
+                        {% elif loop.index == 2 %}🥈
+                        {% elif loop.index == 3 %}🥉
+                        {% else %}🏅
+                        {% endif %}
+                    </div>
+                    <div class="points">{{ "{:,}".format(org.total_points) }}</div>
+                    {% if org.monthly_growth %}
+                    <div class="growth">
+                        <span>↑</span> +{{ org.monthly_growth }}% this month
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>

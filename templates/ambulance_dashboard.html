@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ambulance Dashboard - {{ ambulance.vehicle_number }}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+            min-height: 100vh;
+            color: white;
+        }
+        
+        .header {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: blur(10px);
+        }
+        
+        .vehicle-info h1 {
+            font-size: 1.75rem;
+            margin-bottom: 0.25rem;
+        }
+        
+        .vehicle-info p {
+            opacity: 0.9;
+            font-size: 0.95rem;
+        }
+        
+        .status-badge {
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1rem;
+            text-transform: uppercase;
+        }
+        
+        .status-badge.available {
+            background: rgba(34, 197, 94, 0.3);
+            border: 2px solid #22c55e;
+        }
+        
+        .status-badge.assigned {
+            background: rgba(245, 158, 11, 0.3);
+            border: 2px solid #f59e0b;
+            animation: pulse 2s infinite;
+        }
+        
+        .status-badge.on-duty {
+            background: rgba(59, 130, 246, 0.3);
+            border: 2px solid #3b82f6;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        
+        .card h2 {
+            margin-bottom: 1.5rem;
+            color: #dc2626;
+            font-size: 1.5rem;
+        }
+        
+        .emergency-card {
+            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+            border: 2px solid #dc2626;
+        }
+        
+        .emergency-card.assigned {
+            background: linear-gradient(135deg, #fefce8 0%, #fef3c7 100%);
+            border-color: #f59e0b;
+        }
+        
+        .emergency-card.on-duty {
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            border-color: #3b82f6;
+        }
+        
+        .emergency-details {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+        }
+        
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+        
+        .detail-label {
+            font-weight: 600;
+            color: #6b7280;
+        }
+        
+        .detail-value {
+            color: #1f2937;
+            font-weight: 600;
+        }
+        
+        .timer {
+            text-align: center;
+            padding: 1.5rem;
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+        }
+        
+        .timer-label {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-bottom: 0.5rem;
+        }
+        
+        .timer-value {
+            font-size: 3rem;
+            font-weight: 700;
+            color: #dc2626;
+        }
+        
+        .timer-value.on-duty {
+            color: #3b82f6;
+        }
+        
+        .btn-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        
+        .btn {
+            padding: 1.25rem;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+        }
+        
+        .btn-accept {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+        }
+        
+        .btn-accept:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4);
+        }
+        
+        .btn-decline {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        }
+        
+        .btn-decline:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+        }
+        
+        .btn-complete {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+            grid-column: 1 / -1;
+            font-size: 1.25rem;
+            padding: 1.5rem;
+        }
+        
+        .btn-complete:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+        }
+        
+        .btn-logout {
+            background: rgba(0, 0, 0, 0.2);
+            color: white;
+            border: 2px solid white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-logout:hover {
+            background: white;
+            color: #dc2626;
+        }
+        
+        .maps-link {
+            display: block;
+            text-align: center;
+            padding: 1rem;
+            background: #22c55e;
+            color: white;
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .maps-link:hover {
+            background: #16a34a;
+            transform: translateY(-2px);
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #6b7280;
+        }
+        
+        .empty-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+        
+        .info-box {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .info-box p {
+            margin: 0;
+            color: #1e40af;
+            font-size: 0.95rem;
+        }
+        
+        @media (max-width: 600px) {
+            .btn-group {
+                grid-template-columns: 1fr;
+            }
+            
+            .header {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="vehicle-info">
+            <h1>🚑 {{ ambulance.vehicle_number }}</h1>
+            <p>Driver: {{ ambulance.driver_name }}</p>
+        </div>
+        <div style="display: flex; gap: 1rem; align-items: center;">
+            <span class="status-badge {{ ambulance.status }}">
+                {% if ambulance.status == 'available' %}✓ AVAILABLE
+                {% elif ambulance.status == 'assigned' %}⏳ ASSIGNED
+                {% elif ambulance.status == 'on_duty' %}🚨 ON DUTY
+                {% else %}⚫ OFFLINE
+                {% endif %}
+            </span>
+            <a href="/logout" class="btn-logout">Logout</a>
+        </div>
+    </div>
+    
+    <div class="container">
+        {% if assigned_emergency %}
+        <!-- ASSIGNED: Waiting for driver to accept/decline (1 min timer) -->
+        <div class="card emergency-card assigned">
+            <h2>⏳ New Emergency Assignment</h2>
+            
+            <div class="timer">
+                <div class="timer-label">Time to Accept/Decline</div>
+                <div class="timer-value" id="countdown">{{ assigned_emergency.time_remaining }}s</div>
+            </div>
+            
+            <div class="emergency-details">
+                <div class="detail-row">
+                    <span class="detail-label">📍 Location</span>
+                    <span class="detail-value">{{ assigned_emergency.location.address[:50] }}...</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">🚨 Severity</span>
+                    <span class="detail-value">{{ assigned_emergency.severity|upper }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">👥 Patients</span>
+                    <span class="detail-value">{{ assigned_emergency.patient_count }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">📞 Caller</span>
+                    <span class="detail-value">{{ assigned_emergency.caller_name }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">☎️ Phone</span>
+                    <span class="detail-value">{{ assigned_emergency.caller_phone }}</span>
+                </div>
+                {% if assigned_emergency.description %}
+                <div class="detail-row">
+                    <span class="detail-label">📝 Description</span>
+                    <span class="detail-value">{{ assigned_emergency.description }}</span>
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="info-box">
+                <p>⚠️ Please accept or decline within 1 minute, or the assignment will be cancelled.</p>
+            </div>
+            
+            <div class="btn-group">
+                <button class="btn btn-accept" onclick="acceptEmergency('{{ assigned_emergency._id }}')">
+                    ✓ ACCEPT
+                </button>
+                <button class="btn btn-decline" onclick="declineEmergency('{{ assigned_emergency._id }}')">
+                    ✗ DECLINE
+                </button>
+            </div>
+        </div>
+        
+        {% elif on_duty_emergency %}
+        <!-- ON DUTY: Driver accepted and is responding -->
+        <div class="card emergency-card on-duty">
+            <h2>🚨 Active Emergency Mission</h2>
+            
+            <div class="timer">
+                <div class="timer-label">Mission Duration</div>
+                <div class="timer-value on-duty">{{ on_duty_emergency.elapsed_minutes }} min</div>
+            </div>
+            
+            <div class="emergency-details">
+                <div class="detail-row">
+                    <span class="detail-label">📍 Location</span>
+                    <span class="detail-value">{{ on_duty_emergency.location.address[:50] }}...</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">🚨 Severity</span>
+                    <span class="detail-value">{{ on_duty_emergency.severity|upper }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">👥 Patients</span>
+                    <span class="detail-value">{{ on_duty_emergency.patient_count }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">📞 Caller</span>
+                    <span class="detail-value">{{ on_duty_emergency.caller_name }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">☎️ Phone</span>
+                    <span class="detail-value">{{ on_duty_emergency.caller_phone }}</span>
+                </div>
+                {% if on_duty_emergency.description %}
+                <div class="detail-row">
+                    <span class="detail-label">📝 Description</span>
+                    <span class="detail-value">{{ on_duty_emergency.description }}</span>
+                </div>
+                {% endif %}
+            </div>
+            
+            <a href="https://www.google.com/maps?q={{ on_duty_emergency.location.lat }},{{ on_duty_emergency.location.lng }}" 
+               target="_blank" 
+               class="maps-link">
+                🗺️ Open in Google Maps
+            </a>
+            
+            <div class="info-box">
+                <p>📍 Navigate to the location and provide emergency assistance. Click "Complete Mission" when done.</p>
+            </div>
+            
+            <div class="btn-group">
+                <button class="btn btn-complete" onclick="completeMission('{{ on_duty_emergency._id }}')">
+                    ✓ COMPLETE MISSION
+                </button>
+            </div>
+        </div>
+        
+        {% elif active_blood_transport %}
+        <!-- Blood Transport Mission -->
+        <div class="card emergency-card on-duty">
+            <h2>🩸 Blood Transport Mission</h2>
+            
+            <div class="emergency-details">
+                <div class="detail-row">
+                    <span class="detail-label">🏥 From</span>
+                    <span class="detail-value">{{ active_blood_transport.donor_hospital_name }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">🏥 To</span>
+                    <span class="detail-value">{{ active_blood_transport.requesting_hospital_name }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">🩸 Blood Type</span>
+                    <span class="detail-value">{{ active_blood_transport.blood_type }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">📦 Units</span>
+                    <span class="detail-value">{{ active_blood_transport.units }}</span>
+                </div>
+            </div>
+            
+            <div class="btn-group">
+                <button class="btn btn-complete" onclick="completeBloodTransport('{{ active_blood_transport._id }}')">
+                    ✓ DELIVERY COMPLETE
+                </button>
+            </div>
+        </div>
+        
+        {% else %}
+        <!-- AVAILABLE: No active missions -->
+        <div class="card">
+            <div class="empty-state">
+                <div class="empty-icon">✅</div>
+                <h2>Ready for Duty</h2>
+                <p>Waiting for emergency assignments...</p>
+                <div class="info-box" style="margin-top: 2rem;">
+                    <p>💡 You are online and available. You will be automatically assigned to nearby emergencies.</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    
+    <script>
+        {% if assigned_emergency %}
+        // Countdown timer for assignment acceptance
+        let timeRemaining = {{ assigned_emergency.time_remaining }};
+        const countdownEl = document.getElementById('countdown');
+        
+        const timer = setInterval(() => {
+            timeRemaining--;
+            countdownEl.textContent = timeRemaining + 's';
+            
+            if (timeRemaining <= 0) {
+                clearInterval(timer);
+                location.reload();
+            }
+        }, 1000);
+        {% endif %}
+        
+        function acceptEmergency(emergencyId) {
+            if (confirm('Accept this emergency? You will be marked as ON DUTY.')) {
+                fetch(`/accept-emergency/${emergencyId}`, {method: 'POST'})
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('Emergency accepted! Opening navigation...');
+                            window.open(data.google_maps_link, '_blank');
+                            location.reload();
+                        } else {
+                            alert('Error: ' + data.error);
+                        }
+                    })
+                    .catch(err => {
+                        alert('Error accepting emergency: ' + err);
+                    });
+            }
+        }
+        
+        function declineEmergency(emergencyId) {
+            if (confirm('Decline this emergency? You will be marked as AVAILABLE again.')) {
+                fetch(`/decline-emergency/${emergencyId}`, {method: 'POST'})
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            location.reload();
+                        } else {
+                            alert('Error: ' + data.error);
+                        }
+                    })
+                    .catch(err => {
+                        alert('Error declining emergency: ' + err);
+                    });
+            }
+        }
+        
+        function completeMission(emergencyId) {
+            if (confirm('Mark this emergency as COMPLETE? This will make you AVAILABLE for new assignments.')) {
+                fetch(`/complete-emergency/${emergencyId}`, {method: 'POST'})
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            let message = `Mission Completed Successfully! 🎉\n\n`;
+                            message += `✓ Lives Saved: ${data.lives_saved}\n`;
+                            if (data.response_time) {
+                                message += `✓ Response Time: ${data.response_time} minutes\n`;
+                            }
+                            if (data.total_time) {
+                                message += `✓ Total Time: ${data.total_time} minutes\n`;
+                            }
+                            message += `\nYou are now AVAILABLE for new assignments. Great job!`;
+                            
+                            alert(message);
+                            location.reload();
+                        } else {
+                            alert('Error: ' + data.error);
+                        }
+                    })
+                    .catch(err => {
+                        alert('Error completing mission: ' + err);
+                    });
+            }
+        }
+        
+        function completeBloodTransport(requestId) {
+            if (confirm('Mark this blood transport as COMPLETE?')) {
+                fetch(`/complete-blood-transport/${requestId}`, {method: 'POST'})
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('Blood delivery completed! You are now AVAILABLE.');
+                            location.reload();
+                        } else {
+                            alert('Error: ' + data.error);
+                        }
+                    })
+                    .catch(err => {
+                        alert('Error completing transport: ' + err);
+                    });
+            }
+        }
+        
+        // Auto-refresh every 10 seconds to check for new assignments
+        {% if not assigned_emergency and not on_duty_emergency %}
+        setInterval(() => location.reload(), 10000);
+        {% endif %}
+    </script>
+</body>
+</html>

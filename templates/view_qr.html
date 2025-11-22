@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blood Unit QR Code - {{ blood_unit['blood_id'] }}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0e1a;
+            color: #e2e8f0;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        .qr-card {
+            background: white;
+            border-radius: 24px;
+            padding: 3rem;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            color: #1e293b;
+        }
+        
+        .qr-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+            border-bottom: 4px solid #3b82f6;
+            padding-bottom: 2rem;
+        }
+        
+        .qr-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.75rem;
+        }
+        
+        .blood-id {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #64748b;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .qr-content {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 2.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .qr-image {
+            background: white;
+            padding: 1.5rem;
+            border: 3px solid #e2e8f0;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s ease;
+        }
+        
+        .qr-image:hover {
+            transform: scale(1.02);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+        }
+        
+        .qr-image img {
+            width: 100%;
+            display: block;
+        }
+        
+        .qr-details {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+        
+        .detail-group {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border-radius: 12px;
+            padding: 1.25rem;
+            border-left: 5px solid #3b82f6;
+            transition: all 0.3s ease;
+        }
+        
+        .detail-group:hover {
+            transform: translateX(4px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .detail-label {
+            font-size: 0.8rem;
+            color: #64748b;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 0.5rem;
+        }
+        
+        .detail-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #1e293b;
+        }
+        
+        .blood-type-badge {
+            display: inline-block;
+            padding: 0.75rem 2rem;
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            border-radius: 12px;
+            font-size: 2rem;
+            font-weight: 700;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .status-available {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(34, 197, 94, 0.4);
+        }
+        
+        .status-used {
+            background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+            color: white;
+        }
+        
+        .status-expired {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+        }
+        
+        .warning-box {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border-left: 5px solid #f59e0b;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
+        }
+        
+        .warning-box strong {
+            color: #92400e;
+            font-size: 1.1rem;
+        }
+        
+        .expiry-critical {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            border-left-color: #ef4444;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+        }
+        
+        .expiry-critical strong {
+            color: #991b1b;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2.5rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 1rem 2.5rem;
+            border-radius: 12px;
+            border: none;
+            cursor: pointer;
+            font-size: 1.05rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+            color: white;
+            box-shadow: 0 4px 20px rgba(100, 116, 139, 0.4);
+        }
+        
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .donor-info {
+            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+            border: 2px solid #cbd5e1;
+        }
+        
+        .donor-info-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .donor-details-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+        
+        .donor-detail {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .donor-detail-label {
+            font-size: 0.75rem;
+            color: #64748b;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+        
+        .donor-detail-value {
+            font-weight: 700;
+            color: #1e293b;
+            font-size: 1.1rem;
+        }
+        
+        .hospital-info {
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 1rem;
+            border: 2px solid #93c5fd;
+        }
+        
+        .hospital-info-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #1e40af;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .hospital-detail {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid #93c5fd;
+            margin-bottom: 0.75rem;
+        }
+        
+        .privacy-note {
+            font-size: 0.8rem;
+            color: #64748b;
+            margin-top: 1rem;
+            font-style: italic;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            
+            .action-buttons {
+                display: none;
+            }
+            
+            .qr-card {
+                box-shadow: none;
+                padding: 2rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .qr-content {
+                grid-template-columns: 1fr;
+            }
+
+            .donor-details-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .qr-image {
+                max-width: 350px;
+                margin: 0 auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="qr-card" id="qrCard">
+            <div class="qr-header">
+                <div class="qr-title">🩸 Blood Unit QR Code</div>
+                <div class="blood-id">{{ blood_unit['blood_id'] }}</div>
+            </div>
+            
+            <div class="qr-content">
+                <div class="qr-image">
+                    <img src="{{ blood_unit['qr_code'] }}" alt="QR Code for {{ blood_unit['blood_id'] }}">
+                </div>
+                
+                <div class="qr-details">
+                    <div class="detail-group">
+                        <div class="detail-label">Blood Type</div>
+                        <div class="detail-value">
+                            <span class="blood-type-badge">{{ blood_unit['blood_type'] }}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-group">
+                        <div class="detail-label">Units Available</div>
+                        <div class="detail-value">{{ blood_unit['units'] }} unit(s)</div>
+                    </div>
+                    
+                    <div class="detail-group">
+                        <div class="detail-label">Current Status</div>
+                        <div class="detail-value">
+                            <span class="status-badge status-{{ blood_unit['status'] }}">
+                                {{ blood_unit['status']|title }}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-group">
+                        <div class="detail-label">Collection Date</div>
+                        <div class="detail-value">
+                            📅 {{ blood_unit.get('collected_date_formatted', blood_unit.get('collected_date', 'N/A')) }}
+                        </div>
+                    </div>
+                    
+                    <div class="detail-group">
+                        <div class="detail-label">Expiry Date</div>
+                        <div class="detail-value">
+                            ⏰ {{ blood_unit.get('expiry_date_formatted', blood_unit.get('expiry_date', 'N/A')) }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            {% if days_until_expiry < 7 and blood_unit['status'] == 'available' %}
+            <div class="warning-box {% if days_until_expiry < 3 %}expiry-critical{% endif %}">
+                <strong>⚠️ Warning:</strong> This blood unit expires in <strong>{{ days_until_expiry }} day(s)</strong>. 
+                Must be used before {{ blood_unit.get('expiry_date_formatted', blood_unit.get('expiry_date', 'N/A')) }}.
+            </div>
+            {% endif %}
+            
+            {% if blood_unit['status'] == 'expired' %}
+            <div class="warning-box expiry-critical">
+                <strong>🚫 EXPIRED:</strong> This blood unit has expired and cannot be used for transfusion.
+            </div>
+            {% endif %}
+            
+            {% if blood_unit['status'] == 'used' %}
+            <div class="warning-box" style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); border-left-color: #3b82f6;">
+                <strong style="color: #1e40af;">✓ USED:</strong> This blood unit was successfully used on {{ blood_unit.get('used_at_formatted', blood_unit.get('used_at', 'N/A')) }}.
+            </div>
+            {% endif %}
+            
+            <div class="donor-info">
+                <div class="donor-info-title">
+                    📋 Donor Information
+                </div>
+                <div class="donor-details-grid">
+                    <div class="donor-detail">
+                        <div class="donor-detail-label">Donor ID</div>
+                        <div class="donor-detail-value">{{ blood_unit['donor_id'] }}</div>
+                    </div>
+                    {% if donor %}
+                    <div class="donor-detail">
+                        <div class="donor-detail-label">Total Donations</div>
+                        <div class="donor-detail-value">{{ donor['total_donations'] }}</div>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="privacy-note">
+                    🔒 Full donor details are protected for privacy compliance
+                </div>
+            </div>
+
+            {% if hospital %}
+            <div class="hospital-info">
+                <div class="hospital-info-title">
+                    🏥 Hospital Information
+                </div>
+                <div class="hospital-detail">
+                    <div class="donor-detail-label">Hospital Name</div>
+                    <div class="donor-detail-value">{{ hospital['name'] }}</div>
+                </div>
+                <div class="hospital-detail">
+                    <div class="donor-detail-label">Address</div>
+                    <div class="donor-detail-value">{{ hospital['address'] }}</div>
+                </div>
+                {% if hospital['phone'] %}
+                <div class="hospital-detail">
+                    <div class="donor-detail-label">Contact</div>
+                    <div class="donor-detail-value">{{ hospital['phone'] }}</div>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="action-buttons">
+            <button class="btn btn-primary" onclick="window.print()">
+                🖨️ Print QR Code
+            </button>
+            <button class="btn btn-primary" onclick="downloadQR()">
+                📥 Download QR
+            </button>
+            <a href="/dashboard" class="btn btn-secondary">
+                ← Back to Dashboard
+            </a>
+        </div>
+    </div>
+    
+    <script>
+        function downloadQR() {
+            const qrImage = document.querySelector('.qr-image img');
+            const link = document.createElement('a');
+            link.href = qrImage.src;
+            link.download = '{{ blood_unit['blood_id'] }}_QR.png';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
+</body>
+</html>

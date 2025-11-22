@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hospital Login - LifeLink Grid</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .login-container {
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 3rem;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+        
+        .logo {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .logo-icon {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .logo-text {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #3b82f6;
+            margin-bottom: 0.25rem;
+        }
+        
+        .logo-subtitle {
+            font-size: 0.875rem;
+            opacity: 0.7;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            font-size: 0.875rem;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 0.875rem;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(15, 23, 42, 0.5);
+            color: #e2e8f0;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        .btn-login {
+            width: 100%;
+            padding: 1rem;
+            border-radius: 8px;
+            border: none;
+            background: #3b82f6;
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-login:hover {
+            background: #2563eb;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        }
+        
+        .btn-login:active {
+            transform: translateY(0);
+        }
+        
+        .btn-login:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .error-message {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #fca5a5;
+            padding: 0.875rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            font-size: 0.875rem;
+            display: none;
+        }
+        
+        .error-message.show {
+            display: block;
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .help-text {
+            text-align: center;
+            font-size: 0.875rem;
+            opacity: 0.7;
+            margin-top: 1.5rem;
+        }
+        
+        .credentials-box {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1.5rem;
+            font-size: 0.875rem;
+        }
+        
+        .credentials-box strong {
+            color: #3b82f6;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+        
+        .credentials-box code {
+            background: rgba(15, 23, 42, 0.5);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.85rem;
+        }
+        
+        .loading-spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto;
+        }
+        
+        .loading-spinner.show {
+            display: block;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="logo">
+            <div class="logo-icon">🏥</div>
+            <div class="logo-text">Hospital Portal</div>
+            <div class="logo-subtitle">LifeLink Grid Emergency System</div>
+        </div>
+        
+        <div id="errorMessage" class="error-message"></div>
+        
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input 
+                    type="email" 
+                    id="email" 
+                    placeholder="hospital@example.com" 
+                    required
+                    autocomplete="email"
+                >
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input 
+                    type="password" 
+                    id="password" 
+                    placeholder="Enter password" 
+                    required
+                    autocomplete="current-password"
+                >
+            </div>
+            
+            <button type="submit" class="btn-login" id="loginBtn">
+                <span id="btnText">Login</span>
+                <div class="loading-spinner" id="loadingSpinner"></div>
+            </button>
+        </form>
+        
+        <div class="help-text">
+            Secure login for hospital blood banks.<br>
+            Contact admin if you need assistance.
+        </div>
+        
+        <div class="credentials-box">
+            <strong>🔑 Demo Credentials:</strong>
+            <div style="margin-top: 0.5rem; line-height: 1.8;">
+                <div><code>manipal@hospital.com</code> / <code>demo123</code></div>
+                <div><code>apollo@hospital.com</code> / <code>demo123</code></div>
+                <div><code>fortis@hospital.com</code> / <code>demo123</code></div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const errorMessage = document.getElementById('errorMessage');
+            const loginBtn = document.getElementById('loginBtn');
+            const btnText = document.getElementById('btnText');
+            const loadingSpinner = document.getElementById('loadingSpinner');
+            
+            // Hide error
+            errorMessage.classList.remove('show');
+            
+            // Show loading state
+            loginBtn.disabled = true;
+            btnText.style.display = 'none';
+            loadingSpinner.classList.add('show');
+            
+            try {
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Success - redirect
+                    btnText.textContent = '✓ Success!';
+                    btnText.style.display = 'block';
+                    loadingSpinner.classList.remove('show');
+                    
+                    setTimeout(() => {
+                        window.location.href = '/dashboard';
+                    }, 500);
+                } else {
+                    // Show error
+                    loginBtn.disabled = false;
+                    btnText.style.display = 'block';
+                    btnText.textContent = 'Login';
+                    loadingSpinner.classList.remove('show');
+                    
+                    errorMessage.textContent = data.message || 'Invalid email or password. Please try again.';
+                    errorMessage.classList.add('show');
+                }
+            } catch (error) {
+                // Network error
+                loginBtn.disabled = false;
+                btnText.style.display = 'block';
+                btnText.textContent = 'Login';
+                loadingSpinner.classList.remove('show');
+                
+                errorMessage.textContent = 'Connection failed. Please check your network and try again.';
+                errorMessage.classList.add('show');
+            }
+        });
+        
+        // Clear error on input
+        document.getElementById('email').addEventListener('input', () => {
+            document.getElementById('errorMessage').classList.remove('show');
+        });
+        
+        document.getElementById('password').addEventListener('input', () => {
+            document.getElementById('errorMessage').classList.remove('show');
+        });
+    </script>
+</body>
+</html>

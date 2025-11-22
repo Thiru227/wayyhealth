@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blood Donation Entry</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+        }
+        
+        .navbar {
+            background: rgba(15, 23, 42, 0.98);
+            padding: 1rem 2rem;
+            border-bottom: 1px solid rgba(59, 130, 246, 0.3);
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #3b82f6;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .card {
+            background: rgba(30, 41, 59, 0.6);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: #3b82f6;
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        .form-input, .form-select {
+            width: 100%;
+            padding: 0.875rem;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(15, 23, 42, 0.6);
+            color: #e2e8f0;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+        
+        .form-input:focus, .form-select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        .btn {
+            padding: 0.875rem 2rem;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2563eb;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+        }
+        
+        .btn-secondary {
+            background: rgba(148, 163, 184, 0.2);
+            color: #94a3b8;
+        }
+        
+        .info-box {
+            background: rgba(59, 130, 246, 0.1);
+            border-left: 4px solid #3b82f6;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .success-message {
+            background: rgba(34, 197, 94, 0.1);
+            border-left: 4px solid #22c55e;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            display: none;
+        }
+        
+        .qr-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .qr-item {
+            background: rgba(15, 23, 42, 0.6);
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+        }
+        
+        .qr-item img {
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+        
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">🩸 Blood Donation Entry</div>
+    </nav>
+    
+    <div class="container">
+        <div class="card">
+            <h2 class="card-title">Enter Blood Donation Details</h2>
+            
+            <div class="info-box">
+                <strong>📋 QR Code Generation:</strong>
+                <ul style="margin-top: 0.5rem; margin-left: 1.5rem; line-height: 1.6;">
+                    <li>2 units of A+/B+/AB+ = 1 QR code</li>
+                    <li>1 unit of O+ = 1 QR code</li>
+                    <li>QR codes auto-expire after 35 days</li>
+                    <li>Each unit gets a unique Blood ID</li>
+                </ul>
+            </div>
+            
+            <div id="successMessage" class="success-message"></div>
+            
+            <form id="donationForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Donor ID</label>
+                        <input type="text" id="donorId" class="form-input" placeholder="DNR8A4F3C21" >
+                        <small style="opacity: 0.7;">Leave blank to auto-generate</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Donor Name *</label>
+                        <input type="text" id="donorName" class="form-input" placeholder="John Doe" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Blood Type *</label>
+                        <select id="bloodType" class="form-select" required>
+                            <option value="">Select Blood Type</option>
+                            <option value="A+">A+</option>
+                            <option value="A-">A-</option>
+                            <option value="B+">B+</option>
+                            <option value="B-">B-</option>
+                            <option value="O+">O+</option>
+                            <option value="O-">O-</option>
+                            <option value="AB+">AB+</option>
+                            <option value="AB-">AB-</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Collection Date *</label>
+                        <select id="collectionDate" class="form-select" required>
+                            <option value="today">Today</option>
+                            <option value="yesterday">Yesterday</option>
+                            <option value="custom">Custom Date...</option>
+                        </select>
+                    </div>
+                    
+                    <div id="customDatePicker" class="form-group full-width" style="display: none;">
+                        <label class="form-label">Select Custom Date</label>
+                        <input type="date" id="customDate" class="form-input" max="">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Units Donated *</label>
+                        <input type="number" id="units" class="form-input" value="2" min="1" max="10" required>
+                        <small style="opacity: 0.7;">Standard: 2 units per donation</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Donor Phone *</label>
+                        <input type="tel" id="donorPhone" class="form-input" placeholder="+91-9876543210" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Donor Email</label>
+                        <input type="email" id="donorEmail" class="form-input" placeholder="donor@example.com">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Organization/College</label>
+                        <input type="text" id="organization" class="form-input" placeholder="e.g., VIT Vellore">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">District</label>
+                        <input type="text" id="district" class="form-input" placeholder="e.g., Bangalore Urban">
+                    </div>
+                    
+                    <div class="form-group full-width">
+                        <label class="form-label">State</label>
+                        <select id="state" class="form-select">
+                            <option value="">Select State</option>
+                            <option value="Karnataka">Karnataka</option>
+                            <option value="Tamil Nadu">Tamil Nadu</option>
+                            <option value="Kerala">Kerala</option>
+                            <option value="Andhra Pradesh">Andhra Pradesh</option>
+                            <option value="Telangana">Telangana</option>
+                            <option value="Maharashtra">Maharashtra</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">
+                        🩸 Record Donation & Generate QR
+                    </button>
+                    <a href="/dashboard" class="btn btn-secondary" style="text-decoration: none;">
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+        
+        <div id="qrResults" class="card" style="display: none;">
+            <h2 class="card-title">✅ QR Codes Generated</h2>
+            <div id="qrGrid" class="qr-grid"></div>
+        </div>
+    </div>
+    
+    <script>
+        // Auto-generate donor ID if empty
+        document.getElementById('donationForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            let donorId = document.getElementById('donorId').value.trim();
+            
+            // Generate donor ID if empty
+            if (!donorId) {
+                donorId = 'DNR' + Math.random().toString(36).substr(2, 8).toUpperCase();
+                document.getElementById('donorId').value = donorId;
+            }
+            
+            // Get collection date
+            const collectionDateValue = getCollectionDate();
+            
+            const data = {
+                donor_id: donorId,
+                donor_name: document.getElementById('donorName').value,
+                blood_type: document.getElementById('bloodType').value,
+                units: document.getElementById('units').value,
+                collection_date: collectionDateValue,
+                donor_phone: document.getElementById('donorPhone').value,
+                donor_email: document.getElementById('donorEmail').value,
+                organization: document.getElementById('organization').value,
+                district: document.getElementById('district').value,
+                state: document.getElementById('state').value
+            };
+            
+            try {
+                const response = await fetch('/blood-entry', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Show success message
+                    const successMsg = document.getElementById('successMessage');
+                    successMsg.textContent = `✅ ${result.message}! Donor ${donorId} updated.`;
+                    successMsg.style.display = 'block';
+                    
+                    // Show QR results
+                    document.getElementById('qrResults').style.display = 'block';
+                    
+                    // Scroll to results
+                    document.getElementById('qrResults').scrollIntoView({ behavior: 'smooth' });
+                    
+                    // Show message to view QRs
+                    const qrGrid = document.getElementById('qrGrid');
+                    qrGrid.innerHTML = `
+                        <div style="grid-column: 1 / -1; text-align: center; padding: 2rem;">
+                            <h3 style="margin-bottom: 1rem;">🎉 Donation Recorded Successfully!</h3>
+                            <p style="opacity: 0.8; margin-bottom: 1.5rem;">
+                                ${result.message} for Blood Type: ${data.blood_type}
+                            </p>
+                            <a href="/dashboard" class="btn btn-primary" style="text-decoration: none;">
+                                View All QR Codes in Dashboard
+                            </a>
+                        </div>
+                    `;
+                    
+                    // Reset form
+                    document.getElementById('donationForm').reset();
+                } else {
+                    alert('Error: ' + result.message);
+                }
+            } catch (error) {
+                alert('Error recording donation: ' + error.message);
+            }
+        });
+        
+        // Set max date to today for custom date picker
+        document.getElementById('customDate').max = new Date().toISOString().split('T')[0];
+        
+        // Collection date change handler
+        document.getElementById('collectionDate').addEventListener('change', function() {
+            const customDatePicker = document.getElementById('customDatePicker');
+            const customDateInput = document.getElementById('customDate');
+            
+            if (this.value === 'custom') {
+                customDatePicker.style.display = 'block';
+                customDateInput.required = true;
+            } else {
+                customDatePicker.style.display = 'none';
+                customDateInput.required = false;
+            }
+        });
+        
+        // Function to get collection date value
+        function getCollectionDate() {
+            const collectionDate = document.getElementById('collectionDate').value;
+            
+            if (collectionDate === 'custom') {
+                const customDate = document.getElementById('customDate').value;
+                if (customDate) {
+                    // Format date as ISO string for backend parsing
+                    // Backend expects format that can be parsed by datetime.fromisoformat()
+                    return customDate + 'T00:00:00';
+                }
+                return 'today'; // Fallback to today if no custom date selected
+            }
+            
+            return collectionDate;
+        }
+        
+        // Blood type change handler - suggest units
+        document.getElementById('bloodType').addEventListener('change', (e) => {
+            const bloodType = e.target.value;
+            const unitsInput = document.getElementById('units');
+            
+            if (bloodType === 'O+') {
+                unitsInput.value = 1;
+                unitsInput.parentElement.querySelector('small').textContent = 'O+ typically: 1 unit = 1 QR';
+            } else {
+                unitsInput.value = 2;
+                unitsInput.parentElement.querySelector('small').textContent = 'Standard: 2 units = 1 QR';
+            }
+        });
+    </script>
+</body>
+</html>

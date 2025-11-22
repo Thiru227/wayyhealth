@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LifeLink Grid - Control Room Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0e1a;
+            color: #e2e8f0;
+            min-height: 100vh;
+        }
+        
+        .navbar {
+            background: linear-gradient(135deg, #1a1f35 0%, #0f1419 100%);
+            backdrop-filter: blur(20px);
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .logo-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
+        }
+        
+        .logo-text {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .logo-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .logo-subtitle {
+            font-size: 0.75rem;
+            opacity: 0.6;
+            letter-spacing: 0.05em;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 0.5rem;
+            flex: 1;
+            margin-left: 2rem;
+        }
+        
+        .nav-link {
+            padding: 0.75rem 1.25rem;
+            border-radius: 10px;
+            text-decoration: none;
+            color: #94a3b8;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .nav-link:hover {
+            background: rgba(59, 130, 246, 0.1);
+            color: #3b82f6;
+        }
+        
+        .nav-link.active {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(37, 99, 235, 0.1) 100%);
+            color: #60a5fa;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+        
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            padding: 2rem;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            transition: height 0.3s ease;
+        }
+        
+        .stat-card:hover::before {
+            height: 100%;
+            opacity: 0.05;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        .stat-card.green {
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.15) 0%, rgba(21, 128, 61, 0.05) 100%);
+        }
+        
+        .stat-card.green::before {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+        }
+        
+        .stat-card.blue {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(29, 78, 216, 0.05) 100%);
+        }
+        
+        .stat-card.blue::before {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        }
+        
+        .stat-card.purple {
+            background: linear-gradient(135deg, rgba(168, 85, 247, 0.15) 0%, rgba(126, 34, 206, 0.05) 100%);
+        }
+        
+        .stat-card.purple::before {
+            background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%);
+        }
+        
+        .stat-card.orange {
+            background: linear-gradient(135deg, rgba(249, 115, 22, 0.15) 0%, rgba(234, 88, 12, 0.05) 100%);
+        }
+        
+        .stat-card.orange::before {
+            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+        }
+        
+        .stat-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            opacity: 0.9;
+        }
+        
+        .stat-label {
+            font-size: 0.95rem;
+            opacity: 0.7;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .stat-value {
+            font-size: 2.75rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            line-height: 1;
+        }
+        
+        .main-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .card {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.6) 100%);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+        
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .card-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .emergency-item {
+            padding: 1.5rem;
+            background: rgba(15, 23, 42, 0.8);
+            border-radius: 16px;
+            margin-bottom: 1rem;
+            border-left: 4px solid;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .emergency-item:hover {
+            background: rgba(15, 23, 42, 0.95);
+            transform: translateX(8px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .emergency-item.critical {
+            border-left-color: #ef4444;
+            background: linear-gradient(90deg, rgba(239, 68, 68, 0.1) 0%, rgba(15, 23, 42, 0.8) 10%);
+        }
+        
+        .emergency-item.high {
+            border-left-color: #f59e0b;
+            background: linear-gradient(90deg, rgba(245, 158, 11, 0.1) 0%, rgba(15, 23, 42, 0.8) 10%);
+        }
+        
+        .emergency-item.medium {
+            border-left-color: #3b82f6;
+            background: linear-gradient(90deg, rgba(59, 130, 246, 0.1) 0%, rgba(15, 23, 42, 0.8) 10%);
+        }
+        
+        .emergency-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+        
+        .emergency-location {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+        
+        .severity-badge {
+            padding: 0.4rem 0.9rem;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        
+        .severity-badge.critical {
+            background: rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+        
+        .severity-badge.high {
+            background: rgba(245, 158, 11, 0.2);
+            color: #fcd34d;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+        
+        .severity-badge.medium {
+            background: rgba(59, 130, 246, 0.2);
+            color: #93c5fd;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+        
+        .emergency-details {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-bottom: 0.75rem;
+        }
+        
+        .ambulance-info {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: rgba(59, 130, 246, 0.1);
+            border-radius: 12px;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+        
+        .ambulance-info.on-duty {
+            background: rgba(34, 197, 94, 0.1);
+            border-color: rgba(34, 197, 94, 0.3);
+        }
+        
+        .ambulance-info.waiting {
+            background: rgba(245, 158, 11, 0.1);
+            border-color: rgba(245, 158, 11, 0.3);
+        }
+        
+        .emergency-time {
+            font-size: 0.75rem;
+            opacity: 0.6;
+            margin-top: 0.75rem;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-top: 0.5rem;
+        }
+        
+        .status-indicator.on-duty {
+            background: rgba(34, 197, 94, 0.2);
+            color: #86efac;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+        
+        .status-indicator.assigned {
+            background: rgba(245, 158, 11, 0.2);
+            color: #fcd34d;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .ambulance-item {
+            padding: 1.25rem;
+            background: rgba(15, 23, 42, 0.8);
+            border-radius: 12px;
+            margin-bottom: 0.75rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+            border: 1px solid transparent;
+        }
+        
+        .ambulance-item:hover {
+            background: rgba(15, 23, 42, 0.95);
+            border-color: rgba(59, 130, 246, 0.3);
+            transform: translateX(4px);
+        }
+        
+        .status-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .status-badge.available {
+            background: rgba(34, 197, 94, 0.2);
+            color: #86efac;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+        
+        .status-badge.assigned {
+            background: rgba(245, 158, 11, 0.2);
+            color: #fcd34d;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            animation: pulse 2s infinite;
+        }
+        
+        .status-badge.on_duty {
+            background: rgba(59, 130, 246, 0.2);
+            color: #93c5fd;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+        
+        .status-badge.offline {
+            background: rgba(148, 163, 184, 0.2);
+            color: #cbd5e1;
+            border: 1px solid rgba(148, 163, 184, 0.3);
+        }
+        
+        .btn {
+            padding: 0.85rem 1.75rem;
+            border-radius: 12px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.3);
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 30px rgba(59, 130, 246, 0.4);
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            opacity: 0.6;
+        }
+        
+        @media (max-width: 1400px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">
+            <div class="logo-icon">⚡</div>
+            <div class="logo-text">
+                <div class="logo-title">LifeLink Grid</div>
+                <div class="logo-subtitle">EMERGENCY RESPONSE NETWORK</div>
+            </div>
+        </div>
+        
+        <div class="nav-links">
+            <a href="/dashboard" class="nav-link active">🏠 Dashboard</a>
+            <a href="/live-map" class="nav-link">🗺️ Live Map</a>
+            <a href="/donors" class="nav-link">👥 Donors</a>
+            <a href="/gamification" class="nav-link">🏆 Leaderboard</a>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <div class="stats-grid">
+            <div class="stat-card green">
+                <div class="stat-icon">💚</div>
+                <div class="stat-label">Lives Saved</div>
+                <div class="stat-value">{{ lives_saved }}</div>
+            </div>
+            
+            <div class="stat-card blue">
+                <div class="stat-icon">⚡</div>
+                <div class="stat-label">Avg Response Time</div>
+                <div class="stat-value">{{ avg_response_time }}m</div>
+            </div>
+            
+            <div class="stat-card purple">
+                <div class="stat-icon">👥</div>
+                <div class="stat-label">Active Donors</div>
+                <div class="stat-value">{{ active_donors }}</div>
+            </div>
+            
+            <div class="stat-card orange">
+                <div class="stat-icon">🚑</div>
+                <div class="stat-label">Ambulances</div>
+                <div class="stat-value">
+                    <span style="color: #86efac;">{{ available_ambulances_count }}</span>
+                    <span style="font-size: 1.5rem; opacity: 0.5;">/</span>
+                    <span style="color: #93c5fd;">{{ on_duty_count }}</span>
+                    <span style="font-size: 1.5rem; opacity: 0.5;">/</span>
+                    {{ all_ambulances|length }}
+                </div>
+                <div style="font-size: 0.75rem; opacity: 0.6; margin-top: 0.5rem;">
+                    Available / On Duty / Total
+                </div>
+            </div>
+        </div>
+        
+        <div class="main-grid">
+            <div>
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">🚨 Active Emergencies</h3>
+                        <button class="btn btn-primary" onclick="window.open('http://localhost:5003', '_blank')">
+                            + Register Emergency
+                        </button>
+                    </div>
+                    
+                    {% if pending_emergencies %}
+                        <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 12px; padding: 1rem; margin-bottom: 1.5rem;">
+                            <h4 style="margin-bottom: 1rem; color: #f59e0b;">⏳ Waiting for Ambulances ({{ pending_emergencies|length }})</h4>
+                            {% for emergency in pending_emergencies %}
+                            <div class="emergency-item {{ emergency.severity }}" style="margin-bottom: 0.75rem;">
+                                <div class="emergency-header">
+                                    <div class="emergency-location">📍 {{ emergency.location.address }}</div>
+                                    <span class="severity-badge {{ emergency.severity }}">{{ emergency.severity|upper }}</span>
+                                </div>
+                                <div class="emergency-details">
+                                    Patients: {{ emergency.patient_count }}
+                                </div>
+                                <div style="margin-top: 1rem; padding: 1rem; background: rgba(245, 158, 11, 0.1); border-radius: 12px; border: 1px solid rgba(245, 158, 11, 0.2); display: flex; justify-content: space-between; align-items: center;">
+                                    <div>
+                                        <div class="status-indicator" style="background: rgba(245, 158, 11, 0.2); color: #fcd34d; border-color: rgba(245, 158, 11, 0.3);">
+                                            🔍 NO AMBULANCES AVAILABLE
+                                        </div>
+                                        <div style="font-size: 0.75rem; opacity: 0.8; margin-top: 0.5rem;">
+                                            Will auto-assign when ambulance comes online
+                                        </div>
+                                    </div>
+                                    <button onclick="clearEmergency('{{ emergency._id }}')" style="padding: 0.5rem 1rem; background: rgba(239, 68, 68, 0.2); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; cursor: pointer; font-size: 0.85rem;">
+                                        ✕ Cancel
+                                    </button>
+                                </div>
+                                <div class="emergency-time">⏱️ Waiting: {{ emergency.created_at.strftime('%H:%M:%S') }}</div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    
+                    {% if active_emergencies %}
+                        {% for emergency in active_emergencies %}
+                        <div class="emergency-item {{ emergency.severity }}">
+                            <div class="emergency-header">
+                                <div class="emergency-location">📍 {{ emergency.location.address }}</div>
+                                <span class="severity-badge {{ emergency.severity }}">{{ emergency.severity|upper }}</span>
+                            </div>
+                            <div class="emergency-details">
+                                Patients: {{ emergency.patient_count }}
+                                {% if emergency.blood_type_needed %}
+                                | Blood: {{ emergency.blood_type_needed }}
+                                {% endif %}
+                            </div>
+                            
+                            {% if emergency.status == 'on_duty' %}
+                                <div class="ambulance-info on-duty">
+                                    <div style="font-weight: 600; margin-bottom: 0.5rem;">
+                                        🚑 {{ emergency.ambulance.vehicle_number }} - {{ emergency.ambulance.driver_name }}
+                                    </div>
+                                    <div class="status-indicator on-duty">
+                                        ✓ ON DUTY {% if emergency.elapsed_minutes %}({{ emergency.elapsed_minutes }} min){% endif %}
+                                    </div>
+                                    <div style="font-size: 0.85rem; opacity: 0.8; margin-top: 0.5rem;">
+                                        Driver is actively responding. Waiting for completion...
+                                    </div>
+                                </div>
+                            {% elif emergency.status == 'assigned' %}
+                                <div class="ambulance-info waiting">
+                                    <div style="font-weight: 600; margin-bottom: 0.5rem;">
+                                        🚑 {{ emergency.ambulance.vehicle_number }} - {{ emergency.ambulance.driver_name }}
+                                    </div>
+                                    <div class="status-indicator assigned">
+                                        ⏳ WAITING FOR ACCEPTANCE (1 min timer)
+                                    </div>
+                                    <div style="font-size: 0.85rem; opacity: 0.8; margin-top: 0.5rem;">
+                                        Distance: {{ emergency.assigned_distance }}km
+                                    </div>
+                                </div>
+                            {% endif %}
+                            
+                            <div class="emergency-time">⏱️ Reported: {{ emergency.created_at.strftime('%H:%M:%S') }}</div>
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+                    
+                    {% if not active_emergencies and not pending_emergencies %}
+                        <div class="empty-state">
+                            <div style="font-size: 3rem;">✅</div>
+                            <p>No active emergencies</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div>
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">🚑 Ambulance Fleet</h3>
+                    </div>
+                    
+                    {% for ambulance in all_ambulances %}
+                    <div class="ambulance-item">
+                        <div>
+                            <div style="font-weight: 600; margin-bottom: 0.25rem;">{{ ambulance.vehicle_number }}</div>
+                            <div style="font-size: 0.85rem; opacity: 0.7;">
+                                {{ ambulance.driver_name }} | {{ ambulance.ambulance_type|title }}
+                            </div>
+                        </div>
+                        <span class="status-badge {{ ambulance.status }}">
+                            {% if ambulance.status == 'on_duty' %}
+                                🚨 ON DUTY
+                            {% elif ambulance.status == 'assigned' %}
+                                ⏳ ASSIGNED
+                            {% elif ambulance.status == 'available' %}
+                                ✓ AVAILABLE
+                            {% else %}
+                                ⚫ OFFLINE
+                            {% endif %}
+                        </span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Auto-refresh every 5 seconds to update status
+        setInterval(() => location.reload(), 5000);
+    </script>
+</body>
+</html>

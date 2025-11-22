@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emergency Accident Register - LifeLink Grid</title>
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&libraries=places"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+        
+        .container {
+            max-width: 700px;
+            width: 100%;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 1.75rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .emergency-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        .content {
+            padding: 2rem;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #1f2937;
+            font-size: 0.875rem;
+        }
+        
+        .required {
+            color: #dc2626;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #dc2626;
+            box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        .location-methods {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .location-method-btn {
+            padding: 0.75rem 0.5rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.875rem;
+            text-align: center;
+        }
+        
+        .location-method-btn:hover {
+            border-color: #dc2626;
+            background: #fef2f2;
+        }
+        
+        .location-method-btn.active {
+            background: #dc2626;
+            color: white;
+            border-color: #dc2626;
+        }
+        
+        .location-input-container {
+            display: none;
+        }
+        
+        .location-input-container.active {
+            display: block;
+        }
+        
+        #map {
+            width: 100%;
+            height: 300px;
+            border-radius: 8px;
+            margin-top: 0.5rem;
+            border: 2px solid #e5e7eb;
+        }
+        
+        .location-info {
+            background: #f3f4f6;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+        }
+        
+        .location-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+        }
+        
+        .location-status.success {
+            color: #059669;
+        }
+        
+        .location-status.error {
+            color: #dc2626;
+        }
+        
+        .severity-selector {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.5rem;
+        }
+        
+        .severity-option {
+            padding: 0.75rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.875rem;
+        }
+        
+        .severity-option:hover {
+            border-color: #dc2626;
+        }
+        
+        .severity-option.selected {
+            background: #dc2626;
+            color: white;
+            border-color: #dc2626;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .checkbox-item input[type="checkbox"] {
+            width: auto;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 1rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-emergency {
+            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+        }
+        
+        .btn-emergency:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(220, 38, 38, 0.4);
+        }
+        
+        .btn-emergency:active {
+            transform: translateY(0);
+        }
+        
+        .btn-secondary {
+            background: #3b82f6;
+            color: white;
+            margin-top: 0.5rem;
+        }
+        
+        .btn-secondary:hover {
+            background: #2563eb;
+        }
+        
+        .success-message {
+            background: #d1fae5;
+            border: 2px solid #059669;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-top: 1rem;
+            display: none;
+        }
+        
+        .success-message.show {
+            display: block;
+        }
+        
+        .ambulance-list {
+            margin-top: 1rem;
+        }
+        
+        .ambulance-item {
+            background: #f9fafb;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .ambulance-info {
+            flex: 1;
+        }
+        
+        .ambulance-number {
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .distance {
+            color: #059669;
+            font-weight: 600;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+        }
+        
+        .spinner {
+            border: 3px solid #f3f4f6;
+            border-top: 3px solid #dc2626;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .pac-container {
+            z-index: 10000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="emergency-icon">🚨</div>
+            <h1>Emergency Accident Register</h1>
+            <p>Quick accident reporting & ambulance dispatch</p>
+        </div>
+        
+        <div class="content">
+            <form id="accidentForm">
+                <div class="form-group">
+                    <label>Location Method <span class="required">*</span></label>
+                    <div class="location-methods">
+                        <button type="button" class="location-method-btn active" onclick="selectLocationMethod('current')">
+                            📍 Current
+                        </button>
+                        <button type="button" class="location-method-btn" onclick="selectLocationMethod('map')">
+                            🗺️ Map
+                        </button>
+                        <button type="button" class="location-method-btn" onclick="selectLocationMethod('manual')">
+                            ✍️ Manual
+                        </button>
+                    </div>
+
+                    <!-- Current Location -->
+                    <div id="currentLocationContainer" class="location-input-container active">
+                        <button type="button" class="btn btn-secondary" onclick="getCurrentLocation()">
+                            🎯 Detect My Current Location
+                        </button>
+                    </div>
+
+                    <!-- Map Selection -->
+                    <div id="mapLocationContainer" class="location-input-container">
+                        <input type="text" id="mapSearchBox" placeholder="Search for a location..." style="margin-bottom: 0.5rem;">
+                        <div id="map"></div>
+                        <p style="font-size: 0.75rem; color: #6b7280; margin-top: 0.5rem;">Click on the map to select location</p>
+                    </div>
+
+                    <!-- Manual Entry -->
+                    <div id="manualLocationContainer" class="location-input-container">
+                        <input type="text" id="manualAddress" placeholder="Enter full address (e.g., 123 Main St, City, State)">
+                        <button type="button" class="btn btn-secondary" onclick="geocodeManualAddress()">
+                            🔍 Find Location
+                        </button>
+                    </div>
+
+                    <!-- Location Info Display -->
+                    <div class="location-info">
+                        <div class="location-status" id="locationStatus">
+                            <span id="locationIcon">📍</span>
+                            <span id="locationText">Please select a location method</span>
+                        </div>
+                        <input type="hidden" id="latitude" name="latitude" required>
+                        <input type="hidden" id="longitude" name="longitude" required>
+                        <div id="addressDisplay" style="font-size: 0.875rem; color: #6b7280; margin-top: 0.5rem;"></div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Severity Level <span class="required">*</span></label>
+                    <div class="severity-selector">
+                        <div class="severity-option" onclick="selectSeverity('low', this)">
+                            🟢 Low
+                        </div>
+                        <div class="severity-option" onclick="selectSeverity('medium', this)">
+                            🟡 Medium
+                        </div>
+                        <div class="severity-option" onclick="selectSeverity('high', this)">
+                            🟠 High
+                        </div>
+                        <div class="severity-option" onclick="selectSeverity('critical', this)">
+                            🔴 Critical
+                        </div>
+                    </div>
+                    <input type="hidden" id="severity" name="severity" value="medium" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Number of Patients <span class="required">*</span></label>
+                    <input type="number" id="patient_count" name="patient_count" value="1" min="1" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Your Name <span class="required">*</span></label>
+                    <input type="text" id="caller_name" name="caller_name" placeholder="Enter your name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Your Phone Number <span class="required">*</span></label>
+                    <input type="tel" id="caller_phone" name="caller_phone" placeholder="+91 XXXXX XXXXX" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Description of Accident</label>
+                    <textarea id="description" name="description" placeholder="Describe what happened..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>Additional Information</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="vehicle_involved" name="vehicle_involved">
+                            <label for="vehicle_involved" style="margin: 0;">Vehicle involved</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="fire_hazard" name="fire_hazard">
+                            <label for="fire_hazard" style="margin: 0;">Fire hazard</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="chemical_hazard" name="chemical_hazard">
+                            <label for="chemical_hazard" style="margin: 0;">Chemical hazard</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Blood Type Needed (if known)</label>
+                    <select id="blood_type_needed" name="blood_type_needed">
+                        <option value="">Select blood type</option>
+                        <option value="A+">A+</option>
+                        <option value="A-">A-</option>
+                        <option value="B+">B+</option>
+                        <option value="B-">B-</option>
+                        <option value="O+">O+</option>
+                        <option value="O-">O-</option>
+                        <option value="AB+">AB+</option>
+                        <option value="AB-">AB-</option>
+                    </select>
+                </div>
+                
+                <button type="submit" class="btn btn-emergency">
+                    🚨 REPORT EMERGENCY
+                </button>
+            </form>
+            
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Dispatching ambulances...</p>
+            </div>
+            
+            <div class="success-message" id="successMessage">
+                <h3 style="color: #059669; margin-bottom: 1rem;">✅ Emergency Reported Successfully!</h3>
+                <p id="emergencyId" style="font-size: 0.875rem; margin-bottom: 1rem;"></p>
+                <p style="font-weight: 600; margin-bottom: 0.5rem;">Nearest Ambulances:</p>
+                <div class="ambulance-list" id="ambulanceList"></div>
+                <p style="margin-top: 1rem; font-size: 0.875rem; color: #059669;">
+                    📞 You will receive a call from the ambulance driver shortly.
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let map;
+        let marker;
+        let geocoder;
+        let autocomplete;
+        let currentMethod = 'current';
+        
+        // Initialize Google Maps
+        function initMap() {
+            const defaultLocation = { lat: 28.6139, lng: 77.2090 }; // Delhi
+            
+            map = new google.maps.Map(document.getElementById('map'), {
+                center: defaultLocation,
+                zoom: 13
+            });
+            
+            marker = new google.maps.Marker({
+                map: map,
+                draggable: true,
+                position: defaultLocation
+            });
+            
+            geocoder = new google.maps.Geocoder();
+            
+            // Click on map to set location
+            map.addListener('click', (e) => {
+                setMapLocation(e.latLng);
+            });
+            
+            // Drag marker to set location
+            marker.addListener('dragend', (e) => {
+                setMapLocation(e.latLng);
+            });
+            
+            // Autocomplete for map search
+            const searchBox = document.getElementById('mapSearchBox');
+            autocomplete = new google.maps.places.Autocomplete(searchBox);
+            autocomplete.bindTo('bounds', map);
+            
+            autocomplete.addListener('place_changed', () => {
+                const place = autocomplete.getPlace();
+                if (place.geometry) {
+                    map.setCenter(place.geometry.location);
+                    map.setZoom(15);
+                    setMapLocation(place.geometry.location);
+                }
+            });
+        }
+        
+        function setMapLocation(location) {
+            marker.setPosition(location);
+            map.panTo(location);
+            
+            const lat = location.lat();
+            const lng = location.lng();
+            
+            document.getElementById('latitude').value = lat;
+            document.getElementById('longitude').value = lng;
+            
+            // Reverse geocode
+            geocoder.geocode({ location: location }, (results, status) => {
+                if (status === 'OK' && results[0]) {
+                    updateLocationDisplay(lat, lng, results[0].formatted_address, true);
+                } else {
+                    updateLocationDisplay(lat, lng, `${lat.toFixed(6)}, ${lng.toFixed(6)}`, true);
+                }
+            });
+        }
+        
+        function selectLocationMethod(method) {
+            currentMethod = method;
+            
+            // Update button states
+            document.querySelectorAll('.location-method-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Update container visibility
+            document.querySelectorAll('.location-input-container').forEach(container => {
+                container.classList.remove('active');
+            });
+            
+            if (method === 'current') {
+                document.getElementById('currentLocationContainer').classList.add('active');
+            } else if (method === 'map') {
+                document.getElementById('mapLocationContainer').classList.add('active');
+                if (!map) {
+                    initMap();
+                }
+            } else if (method === 'manual') {
+                document.getElementById('manualLocationContainer').classList.add('active');
+            }
+            
+            // Reset location display
+            document.getElementById('locationText').textContent = 'Please select location using ' + method + ' method';
+            document.getElementById('locationIcon').textContent = '📍';
+            document.getElementById('locationStatus').className = 'location-status';
+        }
+        
+        function getCurrentLocation() {
+            document.getElementById('locationText').textContent = 'Getting your location...';
+            document.getElementById('locationIcon').textContent = '🔄';
+            
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    position => {
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+                        
+                        document.getElementById('latitude').value = lat;
+                        document.getElementById('longitude').value = lng;
+                        
+                        // Reverse geocoding to get address
+                        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
+                            .then(response => response.json())
+                            .then(data => {
+                                updateLocationDisplay(lat, lng, data.display_name, true);
+                            })
+                            .catch(err => {
+                                console.error('Geocoding error:', err);
+                                updateLocationDisplay(lat, lng, `${lat.toFixed(6)}, ${lng.toFixed(6)}`, true);
+                            });
+                    },
+                    error => {
+                        console.error('Location error:', error);
+                        updateLocationDisplay(null, null, 'Location access denied', false);
+                        
+                        // Fallback to IP-based location
+                        alert('Location access denied. Please use Map or Manual entry method.');
+                    }
+                );
+            } else {
+                alert('Geolocation is not supported by your browser. Please use Map or Manual entry.');
+            }
+        }
+        
+        function geocodeManualAddress() {
+            const address = document.getElementById('manualAddress').value.trim();
+            
+            if (!address) {
+                alert('Please enter an address');
+                return;
+            }
+            
+            document.getElementById('locationText').textContent = 'Finding location...';
+            document.getElementById('locationIcon').textContent = '🔄';
+            
+            // Using Nominatim for geocoding (free)
+            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data && data.length > 0) {
+                        const lat = parseFloat(data[0].lat);
+                        const lng = parseFloat(data[0].lon);
+                        
+                        document.getElementById('latitude').value = lat;
+                        document.getElementById('longitude').value = lng;
+                        
+                        updateLocationDisplay(lat, lng, data[0].display_name, true);
+                    } else {
+                        updateLocationDisplay(null, null, 'Address not found. Please try again.', false);
+                    }
+                })
+                .catch(err => {
+                    console.error('Geocoding error:', err);
+                    updateLocationDisplay(null, null, 'Error finding address. Please try again.', false);
+                });
+        }
+        
+        function updateLocationDisplay(lat, lng, address, success) {
+            const statusEl = document.getElementById('locationStatus');
+            const iconEl = document.getElementById('locationIcon');
+            const textEl = document.getElementById('locationText');
+            const addressEl = document.getElementById('addressDisplay');
+            
+            if (success) {
+                statusEl.className = 'location-status success';
+                iconEl.textContent = '✅';
+                textEl.textContent = 'Location confirmed';
+                addressEl.textContent = address;
+            } else {
+                statusEl.className = 'location-status error';
+                iconEl.textContent = '❌';
+                textEl.textContent = address;
+                addressEl.textContent = '';
+            }
+        }
+        
+        function selectSeverity(level, element) {
+            document.querySelectorAll('.severity-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            element.classList.add('selected');
+            document.getElementById('severity').value = level;
+        }
+        
+        // Pre-select medium severity
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.severity-option')[1].click();
+        });
+        
+        document.getElementById('accidentForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if (!document.getElementById('latitude').value) {
+                alert('Please select a location before submitting');
+                return;
+            }
+            
+            document.getElementById('accidentForm').style.display = 'none';
+            document.getElementById('loading').style.display = 'block';
+            
+            const formData = {
+                latitude: document.getElementById('latitude').value,
+                longitude: document.getElementById('longitude').value,
+                address: document.getElementById('addressDisplay').textContent,
+                severity: document.getElementById('severity').value,
+                patient_count: document.getElementById('patient_count').value,
+                caller_name: document.getElementById('caller_name').value,
+                caller_phone: document.getElementById('caller_phone').value,
+                description: document.getElementById('description').value,
+                vehicle_involved: document.getElementById('vehicle_involved').checked,
+                fire_hazard: document.getElementById('fire_hazard').checked,
+                chemical_hazard: document.getElementById('chemical_hazard').checked,
+                blood_type_needed: document.getElementById('blood_type_needed').value
+            };
+            
+            try {
+                const response = await fetch('/report-accident', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const data = await response.json();
+                
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('successMessage').classList.add('show');
+                
+                document.getElementById('emergencyId').textContent = `Emergency ID: ${data.emergency_id}`;
+                
+                const ambulanceList = document.getElementById('ambulanceList');
+                ambulanceList.innerHTML = '';
+                
+                if (data.nearest_ambulances && data.nearest_ambulances.length > 0) {
+                    data.nearest_ambulances.forEach(ambulance => {
+                        const div = document.createElement('div');
+                        div.className = 'ambulance-item';
+                        div.innerHTML = `
+                            <div class="ambulance-info">
+                                <div class="ambulance-number">${ambulance.vehicle_number}</div>
+                                <div style="font-size: 0.875rem; color: #6b7280;">${ambulance.driver_name}</div>
+                            </div>
+                            <div class="distance">${ambulance.distance} km</div>
+                        `;
+                        ambulanceList.appendChild(div);
+                    });
+                } else {
+                    ambulanceList.innerHTML = '<p style="color: #6b7280;">No ambulances available nearby. Emergency services have been notified.</p>';
+                }
+                
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to report emergency. Please try again.');
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('accidentForm').style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>

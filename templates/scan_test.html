@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>QR Scanner Test</title>
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: white;
+        }
+        
+        #reader {
+            width: 100%;
+            border: 5px solid #00ff00;
+            border-radius: 10px;
+            margin: 20px 0;
+            background: black;
+        }
+        
+        button {
+            padding: 15px 30px;
+            font-size: 18px;
+            margin: 10px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background: #00ff00;
+            color: black;
+            font-weight: bold;
+        }
+        
+        button:hover {
+            background: #00cc00;
+        }
+        
+        .result {
+            background: #2a2a2a;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border: 2px solid #00ff00;
+        }
+        
+        .error {
+            background: #ff4444;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        
+        .success {
+            background: #44ff44;
+            color: black;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        
+        #log {
+            background: #0a0a0a;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Blood QR Scanner - Simple Test</h1>
+    
+    <div id="log"></div>
+    
+    <div>
+        <button onclick="startScan()" id="startBtn">START SCANNER</button>
+        <button onclick="stopScan()" id="stopBtn" style="background: red; color: white;">STOP SCANNER</button>
+    </div>
+    
+    <div id="reader"></div>
+    
+    <div id="result" style="display: none;" class="result">
+        <h2>Scanned Data:</h2>
+        <pre id="resultText"></pre>
+    </div>
+    
+    <script>
+        let scanner = null;
+        let isScanning = false;
+        
+        function log(message) {
+            const logDiv = document.getElementById('log');
+            const time = new Date().toLocaleTimeString();
+            logDiv.innerHTML = `[${time}] ${message}<br>` + logDiv.innerHTML;
+            console.log(message);
+        }
+        
+        function startScan() {
+            log('🎬 Starting scanner...');
+            
+            if (isScanning) {
+                log('⚠️ Scanner already running!');
+                return;
+            }
+            
+            scanner = new Html5Qrcode("reader");
+            
+            Html5Qrcode.getCameras().then(cameras => {
+                log(`📷 Found ${cameras.length} camera(s)`);
+                
+                if (cameras && cameras.length) {
+                    const cameraId = cameras[cameras.length - 1].id;
+                    log(`✅ Using camera: ${cameraId}`);
+                    
+                    const config = {
+                        fps: 10,
+                        qrbox: { width: 300, height: 300 }
+                    };
+                    
+                    scanner.start(
+                        cameraId,
+                        config,
+                        (decodedText, decodedResult) => {
+                            log('🎉 QR CODE DETECTED!');
+                            log('Raw text: ' + decodedText);
+                            
+                            document.getElementById('result').style.display = 'block';
+                            document.getElementById('resultText').textContent = decodedText;
+                            
+                            // Try to parse JSON
+                            try {
+                                const data = JSON.parse(decodedText);
+                                log('✅ Valid JSON detected');
+                                log('Blood ID: ' + (data.blood_id || 'N/A'));
+                                log('Blood Type: ' + (data.blood_type || 'N/A'));
+                            } catch (e) {
+                                log('⚠️ Not JSON format');
+                            }
+                            
+                            stopScan();
+                        },
+                        (errorMessage) => {
+                            // Ignore scan errors
+                        }
+                    ).then(() => {
+                        isScanning = true;
+                        log('✅ Scanner started successfully!');
+                        log('👉 Point camera at QR code');
+                    }).catch(err => {
+                        log('❌ Error starting scanner: ' + err);
+                    });
+                }
+            }).catch(err => {
+                log('❌ Error getting cameras: ' + err);
+                alert('Cannot access camera! Please:\n1. Allow camera permission\n2. Use HTTPS or localhost\n3. Check if camera is not used by another app');
+            });
+        }
+        
+        function stopScan() {
+            if (scanner && isScanning) {
+                scanner.stop().then(() => {
+                    isScanning = false;
+                    log('⏹️ Scanner stopped');
+                }).catch(err => {
+                    log('❌ Error stopping: ' + err);
+                });
+            }
+        }
+        
+        log('✅ Page loaded. Click START SCANNER button.');
+    </script>
+</body>
+</html>

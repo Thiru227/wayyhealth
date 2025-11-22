@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Blood Availability Map - LifeLink Grid</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0e1a;
+            color: #e2e8f0;
+            min-height: 100vh;
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, #1a1f35 0%, #0f1419 100%);
+            backdrop-filter: blur(20px);
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .logo-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
+        }
+        
+        .logo-text {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .logo-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .logo-subtitle {
+            font-size: 0.75rem;
+            opacity: 0.6;
+            letter-spacing: 0.05em;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 0.5rem;
+            flex: 1;
+            margin-left: 2rem;
+        }
+
+        .nav-link {
+            padding: 0.75rem 1.25rem;
+            border-radius: 10px;
+            text-decoration: none;
+            color: #94a3b8;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-link:hover {
+            background: rgba(59, 130, 246, 0.1);
+            color: #3b82f6;
+        }
+
+        .nav-link.active {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(37, 99, 235, 0.1) 100%);
+            color: #60a5fa;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .header {
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header p {
+            opacity: 0.7;
+            font-size: 1.1rem;
+        }
+
+        .legend {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            backdrop-filter: blur(10px);
+            border: 1px solid;
+        }
+
+        .legend-dot {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            box-shadow: 0 0 10px currentColor;
+        }
+
+        .legend-item.good {
+            background: rgba(34, 197, 94, 0.1);
+            border-color: rgba(34, 197, 94, 0.3);
+            color: #86efac;
+        }
+
+        .legend-item.good .legend-dot {
+            background: #22c55e;
+        }
+
+        .legend-item.low {
+            background: rgba(245, 158, 11, 0.1);
+            border-color: rgba(245, 158, 11, 0.3);
+            color: #fcd34d;
+        }
+
+        .legend-item.low .legend-dot {
+            background: #f59e0b;
+        }
+
+        .legend-item.critical {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: rgba(239, 68, 68, 0.3);
+            color: #fca5a5;
+        }
+
+        .legend-item.critical .legend-dot {
+            background: #ef4444;
+        }
+
+        .hospitals-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .hospital-card {
+            padding: 2rem;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            border: 2px solid;
+            transition: all 0.4s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hospital-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+        }
+
+        .hospital-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .hospital-card.critical {
+            border-color: #ef4444;
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(220, 38, 38, 0.05) 100%);
+        }
+
+        .hospital-card.critical::before {
+            background: linear-gradient(90deg, #ef4444, #dc2626);
+        }
+
+        .hospital-card.low {
+            border-color: #f59e0b;
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(217, 119, 6, 0.05) 100%);
+        }
+
+        .hospital-card.low::before {
+            background: linear-gradient(90deg, #f59e0b, #d97706);
+        }
+
+        .hospital-card.good {
+            border-color: #22c55e;
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.15) 0%, rgba(21, 128, 61, 0.05) 100%);
+        }
+
+        .hospital-card.good::before {
+            background: linear-gradient(90deg, #22c55e, #16a34a);
+        }
+
+        .hospital-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .hospital-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .hospital-card.critical .hospital-icon {
+            background: rgba(239, 68, 68, 0.2);
+        }
+
+        .hospital-card.low .hospital-icon {
+            background: rgba(245, 158, 11, 0.2);
+        }
+
+        .hospital-card.good .hospital-icon {
+            background: rgba(34, 197, 94, 0.2);
+        }
+
+        .hospital-info {
+            flex: 1;
+        }
+
+        .hospital-name {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .hospital-address {
+            font-size: 0.9rem;
+            opacity: 0.7;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .blood-inventory {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.75rem;
+            margin-top: 1.5rem;
+        }
+
+        .blood-type {
+            text-align: center;
+            padding: 1rem;
+            background: rgba(15, 23, 42, 0.6);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .blood-type:hover {
+            background: rgba(15, 23, 42, 0.8);
+            transform: translateY(-2px);
+        }
+
+        .blood-type-label {
+            font-size: 0.8rem;
+            opacity: 0.7;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .blood-type-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .blood-type-value.low {
+            color: #f59e0b;
+        }
+
+        .blood-type-value.critical {
+            color: #ef4444;
+        }
+
+        .blood-type-value.good {
+            color: #22c55e;
+        }
+
+        @media (max-width: 768px) {
+            .hospitals-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .navbar {
+                flex-wrap: wrap;
+                padding: 1rem;
+            }
+            
+            .nav-links {
+                order: 3;
+                width: 100%;
+                margin-left: 0;
+                margin-top: 1rem;
+            }
+
+            .blood-inventory {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">
+            <div class="logo-icon">⚡</div>
+            <div class="logo-text">
+                <div class="logo-title">LifeLink Grid</div>
+                <div class="logo-subtitle">EMERGENCY RESPONSE NETWORK</div>
+            </div>
+        </div>
+
+        <div class="nav-links">
+            <a href="/dashboard" class="nav-link">🏠 Dashboard</a>
+            <a href="/live-map" class="nav-link active">🗺️ Live Map</a>
+            <a href="/donors" class="nav-link">👥 Donors</a>
+            <a href="/gamification" class="nav-link">🏆 Leaderboard</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="header">
+            <h1>🗺️ Live Blood Availability Map</h1>
+            <p>Real-time inventory across all hospitals</p>
+        </div>
+
+        <div class="legend">
+            <div class="legend-item good">
+                <div class="legend-dot"></div>
+                Good Stock (30+ units)
+            </div>
+            <div class="legend-item low">
+                <div class="legend-dot"></div>
+                Low Stock (10-29 units)
+            </div>
+            <div class="legend-item critical">
+                <div class="legend-dot"></div>
+                Critical (&lt;10 units)
+            </div>
+        </div>
+
+        <div class="hospitals-grid">
+            {% for hospital in hospitals %}
+            <div class="hospital-card {{ hospital.status }}">
+                <div class="hospital-header">
+                    <div class="hospital-icon">🏥</div>
+                    <div class="hospital-info">
+                        <div class="hospital-name">{{ hospital.name }}</div>
+                        <div class="hospital-address">
+                            📍 {{ hospital.address }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="blood-inventory">
+                    {% set blood_types = ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'] %}
+                    {% for blood_type in blood_types %}
+                    {% set units = hospital.inventory.get(blood_type, 0) %}
+                    <div class="blood-type">
+                        <div class="blood-type-label">{{ blood_type }}</div>
+                        <div class="blood-type-value 
+                            {% if units < 5 %}critical
+                            {% elif units < 10 %}low
+                            {% else %}good
+                            {% endif %}">
+                            {{ units }}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <script>
+        // Auto-refresh every 30 seconds
+        setInterval(() => {
+            location.reload();
+        }, 30000);
+    </script>
+</body>
+</html>
